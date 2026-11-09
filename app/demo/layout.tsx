@@ -5,9 +5,9 @@ import { InclusiveLogo } from "@/components/InclusiveLogo";
 import SidebarAccount from "@/components/navigation/SidebarAccount";
 import { AppProvider } from "@/components/context/AppContext";
 
-/** Dev-only preview of the full product on the Open Water Marine sample calls (no database needed). */
+/** Preview of the full product on the Open Water Marine sample calls. */
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
-  if (process.env.NODE_ENV === "production" && process.env.DEMO_MODE !== "1") notFound();
+  if (process.env.DEMO_MODE === "0") notFound();
 
   return (
     <AppProvider initialRole="admin" workspaceId="demo">
