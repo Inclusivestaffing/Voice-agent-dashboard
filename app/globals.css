@@ -1,26 +1,79 @@
 @import "tailwindcss";
 
+/* ── Design tokens: brand (yellow on ink, from the Open Water Marine report) + validated viz palette ── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text: #0f172a;
+  --text-dim: #475569;
+  --text-muted: #64748b;
+  --brand: #facc15;
+  --brand-strong: #eab308;
+  --brand-ink: #713f12;
+  --brand-wash: #fffbeb;
+  --brand-glow: #fef9c3;
+  --good: #006300;
+  --good-bg: #dcfce7;
+  --bad: #d03b3b;
+  --bad-bg: #fee2e2;
+  --warn: #b45309;
+  --warn-bg: #fef3c7;
+
+  /* chart chrome */
+  --grid: #ececf3;
+  --axis: #c3c2b7;
+  /* categorical slots (validated reference order) */
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+  --status-good: #0ca30c; --status-warning: #fab219; --status-serious: #ec835a; --status-critical: #d03b3b;
+  --neutral-1: #a3a29c; --neutral-2: #d4d3cc;
+  --single: #2a78d6;
 }
+/* White theme only (per client request): no dark-mode overrides. */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-dim: var(--text-dim);
+  --color-muted: var(--text-muted);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-wash: var(--brand-wash);
+  --color-brand-glow: var(--brand-glow);
+  --color-good: var(--good);
+  --color-good-bg: var(--good-bg);
+  --color-bad: var(--bad);
+  --color-bad-bg: var(--bad-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, Menlo, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+html, body { background: var(--bg); color: var(--text); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+.tabular { font-variant-numeric: tabular-nums; }
+/* Retell dashboard typography: Inter 400/500/600, sentence case or subtle uppercase tracking */
+body { font-size: 14px; letter-spacing: -0.01em; }
+.eyebrow { font-family: var(--font-sans); font-size: 11px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.04em; text-transform: uppercase; }
+.section-title { font-family: var(--font-sans); font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.015em; line-height: 1.35; }
+/* The client report keeps its own (Open Water Marine) design: monospace caps labels with a brand bar. */
+.report-root .eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
+.report-root .section-title { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--text-dim); }
+.report-root .section-title::before { content: ""; width: 4px; height: 14px; background: var(--brand); flex-shrink: 0; }
+.accent-mark { position: relative; display: inline-block; padding: 0 6px; isolation: isolate; white-space: nowrap; color: #0b0b0b; }
+.accent-mark::before { content: ""; position: absolute; inset: 18% -4px 6% -4px; background: var(--brand); transform: rotate(-1.2deg); z-index: -1; border-radius: 4px; }
+details > summary { list-style: none; cursor: pointer; }
+details > summary::-webkit-details-marker { display: none; }
+:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
