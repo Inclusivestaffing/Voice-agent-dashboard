@@ -12,7 +12,7 @@ import { ChartBuilder, DeleteChartButton } from "@/components/charts/ChartBuilde
 import { Card, Empty, fmtDur, fmtMs } from "@/components/ui";
 import SyncButtons from "./SyncButtons";
 import { TopTabBar } from "@/components/navigation/TopTabBar";
-import { canEdit, ROLE_LABEL, isRole } from "@/lib/roles";
+import { canEdit } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 

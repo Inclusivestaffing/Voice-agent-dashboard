@@ -3,6 +3,7 @@
 import { createContext, useContext } from "react";
 import { canEdit, canSeeInsights, type Role } from "@/lib/roles";
 import { useApp } from "@/components/context/AppContext";
+import { DEMO_QS } from "@/lib/demo/range";
 
 /** Fallback RoleContext if AppProvider is not around */
 const RoleContext = createContext<Role | null>(null);
@@ -89,7 +90,9 @@ export function navItems(basePath: string, role: Role, opts: { settings?: boolea
 }
 
 /** Carry the date range and agent across sections so switching keeps context. */
-export function keptQuery(sp: URLSearchParams | { get(k: string): string | null }) {
+export function keptQuery(sp: URLSearchParams | { get(k: string): string | null }, basePath?: string) {
+  // The demo needs its sample window in the URL; adding it here avoids a server redirect per click.
+  if (basePath === "/demo" && !sp.get("range")) return `?${DEMO_QS}`;
   const keep = new URLSearchParams();
   for (const k of ["range", "from", "to", "ft", "tt", "agent"]) {
     const v = sp.get(k);

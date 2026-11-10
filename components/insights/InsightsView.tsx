@@ -55,7 +55,7 @@ export default function InsightsView({
         ) : (
           <div className="space-y-3">
             {issues.map((it, i) => (
-              <details key={it.cause} className="bg-white border border-slate-200/90 rounded-xl shadow-xs overflow-hidden group transition-all" open={i < 2}>
+              <details key={it.cause} className="bg-white border border-slate-200/90 rounded-xl shadow-xs overflow-hidden group" open={i < 2}>
                 <summary className="p-4 flex items-start gap-4 cursor-pointer hover:bg-slate-50/60 transition">
                   <span className="text-xl font-bold text-slate-400 w-7 tabular">{i + 1}</span>
                   <div className="flex-1 min-w-0">

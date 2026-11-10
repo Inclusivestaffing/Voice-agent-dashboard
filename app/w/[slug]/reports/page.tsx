@@ -3,7 +3,7 @@ import { getWorkspace, filterOptions } from "@/lib/db/queries";
 import { Card, Empty, fmtDate } from "@/components/ui";
 import ReportForm from "./ReportForm";
 import { TopTabBar } from "@/components/navigation/TopTabBar";
-import { canEdit, ROLE_LABEL, isRole } from "@/lib/roles";
+import { canEdit } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // report generation (Opus narrative) can take a minute or two

@@ -1,5 +1,6 @@
 import "server-only";
 import { notFound, redirect } from "next/navigation";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { supabaseServer } from "./supabase";
 import { effectiveRole, isRole, VIEW_AS_COOKIE, type Role } from "../roles";
@@ -17,24 +18,32 @@ export interface Workspace {
   agent_display_name: string | null;
 }
 
-export async function requireUser() {
+// React `cache` dedupes these per request: the layout and the page both ask for the workspace,
+// and without it every navigation paid for the same auth + database round trips twice.
+export const requireUser = cache(async () => {
   const db = await supabaseServer();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect("/login");
   return { db, user };
-}
+});
 
-export async function getWorkspace(slug: string) {
+export const getWorkspace = cache(async (slug: string) => {
   const { db, user } = await requireUser();
-  const { data: ws } = await db.from("workspaces").select("*").eq("slug", slug).maybeSingle<Workspace>();
-  if (!ws) notFound();
-  const { data: member } = await db.from("workspace_members").select("role").eq("workspace_id", ws.id).eq("user_id", user.id).maybeSingle();
-  const actualRole: Role = isRole(member?.role) ? member.role : "client";
+  // One query for the workspace and the member's role (embedded, filtered to this user).
+  const { data } = await db.from("workspaces")
+    .select("*, workspace_members(role)")
+    .eq("slug", slug)
+    .eq("workspace_members.user_id", user.id)
+    .maybeSingle<Workspace & { workspace_members: { role: string }[] | null }>();
+  if (!data) notFound();
+  const { workspace_members: members, ...ws } = data;
+  const memberRole = members?.[0]?.role;
+  const actualRole: Role = isRole(memberRole) ? memberRole : "client";
   // `role` drives the UI and honours the "View as" preview (which can only lower access).
   // Server actions re-check the real role from the database, so the cookie never grants anything.
   const role = effectiveRole(actualRole, (await cookies()).get(VIEW_AS_COOKIE)?.value);
-  return { db, user, ws, role, actualRole };
-}
+  return { db, user, ws: ws as Workspace, role, actualRole };
+});
 
 const ANALYTICS_COLUMNS = `call_id, start_ts, end_ts, duration_ms, agent_id, agent_name, agent_version, call_type, direction,
   call_status, disconnection_reason, user_sentiment, call_successful, in_voicemail, combined_cost_cents, e2e_p50_ms,

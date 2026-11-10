@@ -3,7 +3,7 @@ import { getWorkspace, listCalls } from "@/lib/db/queries";
 import { parseFilters, filtersToQuery } from "@/lib/filters";
 import type { CallRow } from "@/lib/types";
 import CallDetailView from "@/components/call-detail/CallDetailView";
-import { canEdit, ROLE_LABEL, isRole } from "@/lib/roles";
+import { canEdit } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 

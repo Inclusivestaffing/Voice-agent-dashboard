@@ -7,7 +7,7 @@ import type { ReportSnapshot } from "@/lib/reports/snapshot";
 import type { ReportNarrative } from "@/lib/ai/schemas";
 import CopyLink from "./CopyLink";
 import ReportActions from "./ReportActions";
-import { canEdit, ROLE_LABEL, isRole } from "@/lib/roles";
+import { canEdit } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 

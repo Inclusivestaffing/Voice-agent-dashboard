@@ -7,7 +7,7 @@ import { parseFilters } from "@/lib/filters";
 import { buildSnapshot, writeNarrative } from "@/lib/reports/build";
 import { ruleNarrative } from "@/lib/reports/snapshot";
 import type { ReportNarrative } from "@/lib/ai/schemas";
-import { canEdit, ROLE_LABEL, isRole } from "@/lib/roles";
+import { canEdit } from "@/lib/roles";
 
 export type ReportState = { error?: string } | null;
 

@@ -136,7 +136,7 @@ function diagnosis(row: Row): CallDiagnosis {
 
 export const DEMO_TZ = "America/Chicago";
 export const DEMO_BH: Record<string, [number, number]> = { mon: [8.5, 17.5], tue: [8.5, 17.5], wed: [8.5, 17.5], thu: [8.5, 17.5], fri: [8.5, 17.5] };
-export const DEMO_RANGE = { from: "2026-08-27", to: "2026-09-30" };
+export { DEMO_RANGE } from "./range";
 
 export type DemoCall = AnalyticsCall & { analysis: Record<string, unknown> | null; call_summary: string | null };
 

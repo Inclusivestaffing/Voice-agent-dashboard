@@ -118,7 +118,9 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
     ));
 
   return (
-    <div className={cx("mb-5 space-y-2.5 transition-opacity", pending && "opacity-75")}>
+    <div className="mb-5 space-y-2.5" aria-busy={pending}>
+      {/* Keep the controls crisp while results load; a thin bar at the top shows progress. */}
+      {pending && <div className="progress-bar" role="progressbar" aria-label="Updating results" />}
       {/* Top Header Buttons: [ Date Range ] [ Filter ] [ Ask AI ] */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2.5 flex-wrap">

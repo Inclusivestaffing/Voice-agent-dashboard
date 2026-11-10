@@ -77,3 +77,57 @@ body { font-size: 14px; letter-spacing: -0.01em; }
 details > summary { list-style: none; cursor: pointer; }
 details > summary::-webkit-details-marker { display: none; }
 :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* ───────── Interaction & motion system ─────────
+   Timing follows the response-time limits: feedback < 100 ms (instant), micro-interactions
+   120–160 ms, content entry ≈ 200 ms, nothing decorative over 300 ms. */
+:root {
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --dur-micro: 140ms;
+  --dur-enter: 200ms;
+}
+
+/* Tailwind v4 resets buttons to the default arrow cursor; anything clickable gets a hand. */
+button:not(:disabled), [role="button"]:not([aria-disabled="true"]), select:not(:disabled),
+summary, label:has(> input[type="checkbox"]), label:has(> input[type="radio"]), a[href] { cursor: pointer; }
+/* Remove the 300 ms tap delay and the grey flash on mobile. */
+a, button, select, summary, [role="button"], input, label { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+/* Press feedback: a 2% dip on the same frame you click. In the base layer so component
+   utilities (e.g. a translate on a positioned button) still win. */
+@layer base {
+  button { transition-property: color, background-color, border-color, box-shadow, opacity, transform; transition-duration: var(--dur-micro); transition-timing-function: var(--ease-out); }
+  button:not(:disabled):active { transform: scale(.98); }
+}
+.press:active { transform: scale(.98); }
+
+/* Skeleton shimmer for loading states. */
+.skeleton { background: linear-gradient(90deg, #eef1f5 0%, #f6f8fa 40%, #eef1f5 80%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+/* Skeletons fade in after a short delay so very fast navigations don't flash them. */
+.skeleton-enter { animation: fade-in var(--dur-enter) var(--ease-out) 80ms backwards; }
+
+/* Spinner inside a nav link while its page loads (appears only if the load takes > 120 ms). */
+.link-pending { animation: spin .7s linear infinite, appear 1ms linear 120ms forwards; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes appear { to { opacity: .7; } }
+
+/* New page content eases in instead of popping. */
+/* `backwards`, not `both`: once finished the animation must stop applying, otherwise every section
+   keeps a stacking context and popovers (date range, filters) render underneath later sections. */
+main > * { animation: fade-in var(--dur-enter) var(--ease-out) backwards; }
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* Thin progress bar for in-page updates (filters, date range). */
+.progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 70; overflow: hidden; pointer-events: none; }
+.progress-bar::after { content: ""; position: absolute; inset: 0; width: 40%; background: var(--text); animation: progress 1s var(--ease-out) infinite; }
+@keyframes progress { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+
+/* Charts reserve their space and fade in when they come into view. */
+.chart-enter { animation: fade-in 240ms var(--ease-out) backwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  .skeleton { animation: none; }
+  .press:active, button:active { transform: none; }
+}

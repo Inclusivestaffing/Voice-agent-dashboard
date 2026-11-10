@@ -6,7 +6,7 @@
 // categorical hues in fixed slot order. Colors come from CSS tokens so dark mode is a
 // selected palette, not an automatic flip.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import * as echarts from "echarts/core";
 import { BarChart, LineChart, PieChart } from "echarts/charts";
@@ -51,11 +51,44 @@ function readTokens(): Record<string, string> {
   return Object.fromEntries(TOKEN_NAMES.map((n) => [n, cs.getPropertyValue(n).trim()]));
 }
 
+// Read the CSS tokens once per page load and share them across all charts.
+let tokenCache: Record<string, string> | null = null;
 function useTokens() {
-  const [tokens, setTokens] = useState<Record<string, string>>({});
-  useEffect(() => { setTokens(readTokens()); }, []);
+  const [tokens, setTokens] = useState<Record<string, string>>(() => tokenCache ?? {});
+  useEffect(() => { if (!tokenCache) tokenCache = readTokens(); setTokens(tokenCache); }, []);
   return tokens;
 }
+
+/**
+ * Mount a chart only when it's near the viewport. An analytics page has ~25 charts; building
+ * them all on load blocks the main thread right when you're trying to click around.
+ */
+function useNearViewport<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    if (typeof IntersectionObserver === "undefined") { setVisible(true); return; }
+    let idle: number | undefined;
+    const io = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
+      io.disconnect();
+      // Draw in an idle slot: each chart builds in its own task, so clicks and typing can be
+      // handled between charts instead of waiting for the whole page to draw.
+      const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 16));
+      idle = ric(() => setVisible(true), { timeout: 250 });
+    }, { rootMargin: "300px 0px" });
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      if (idle !== undefined) (window.cancelIdleCallback ?? window.clearTimeout)(idle);
+    };
+  }, [visible]);
+  return { ref, visible };
+}
+
+const prefersReducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 /** ECharts renders tooltip strings as HTML; every data-derived label must be escaped. */
 function esc(s: unknown): string {
@@ -76,8 +109,13 @@ export function formatValue(v: number | null | undefined, unit?: string): string
 
 export default function Chart({ kind, categories, series, unit, height = 260, labels = "auto", sliceColors, ariaLabel, legendPosition = "right", onSelect }: ChartProps) {
   const t = useTokens();
+  const { ref, visible } = useNearViewport<HTMLDivElement>();
   const option = useMemo(() => {
     if (!t["--text"]) return null;
+    // Short, quiet motion: marks grow in 300 ms on first draw; updates (filters) morph in 200 ms.
+    const motion = prefersReducedMotion()
+      ? { animation: false }
+      : { animationDuration: 300, animationEasing: "cubicOut", animationDurationUpdate: 200, animationEasingUpdate: "cubicOut" };
     const color = (name: string | undefined, i: number) => t[name ?? ""] || t[SLOTS[i % SLOTS.length]];
     const textStyle = { color: t["--text-dim"], fontFamily: "Inter, \"Inter Fallback\", system-ui, sans-serif", fontSize: 12 };
     const tooltip = {
@@ -92,6 +130,7 @@ export default function Chart({ kind, categories, series, unit, height = 260, la
     if (kind === "donut") {
       const total = series[0]?.data.reduce<number>((a, b) => a + (b ?? 0), 0) || 1;
       return {
+        ...motion,
         tooltip: { ...tooltip, trigger: "item", valueFormatter: undefined,
           formatter: (p: { name: string; value: number; marker: string }) => `${p.marker} ${esc(p.name)}<br/><b>${esc(p.value)}</b> · ${Math.round((p.value / total) * 100)}%` },
         legend: { ...(legendPosition === "bottom" ? { orient: "horizontal", bottom: 0, left: 0, right: 0, type: "plain", itemGap: 8 } : { orient: "vertical", right: 0, top: "middle" }), icon: "roundRect", itemWidth: 10, itemHeight: 10, textStyle,
@@ -154,7 +193,7 @@ export default function Chart({ kind, categories, series, unit, height = 260, la
       };
     });
     return {
-      animationDuration: 400,
+      ...motion,
       legend,
       tooltip: {
         ...tooltip, trigger: "axis",
@@ -174,14 +213,18 @@ export default function Chart({ kind, categories, series, unit, height = 260, la
     };
   }, [t, kind, categories, series, unit, labels, sliceColors, legendPosition]);
 
-  if (!option) return <div style={{ height }} aria-busy="true" />;
+  // Reserve the chart's exact height before it draws, so nothing below it jumps.
+  if (!option || !visible) {
+    return <div ref={ref} role="img" aria-label={ariaLabel} aria-busy="true" style={{ height }} className="skeleton rounded-lg opacity-60" />;
+  }
   return (
-    <div role="img" aria-label={ariaLabel}>
+    <div ref={ref} role="img" aria-label={ariaLabel} className="chart-enter">
       <ReactEChartsCore
         echarts={echarts}
         option={option}
         style={{ height, width: "100%" }}
         notMerge
+        lazyUpdate
         opts={{ renderer: "svg" }}
         onEvents={onSelect ? { click: (p: { name: string; seriesName: string }) => onSelect(p.name, p.seriesName) } : undefined}
       />

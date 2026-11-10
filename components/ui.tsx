@@ -20,7 +20,7 @@ export function Card({
   action?: ReactNode;
 }) {
   return (
-    <section className={cx("bg-white border border-slate-200/90 rounded-xl shadow-xs p-5 min-w-0 transition-all", className)}>
+    <section className={cx("bg-white border border-slate-200/90 rounded-xl shadow-xs p-5 min-w-0", className)}>
       {(title || action) && (
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="min-w-0">
@@ -57,7 +57,7 @@ export function Kpi({
   const body = (
     <div
       className={cx(
-        "relative bg-white border border-slate-200/90 rounded-xl p-5 h-full shadow-xs transition-all",
+        "relative bg-white border border-slate-200/90 rounded-xl p-5 h-full shadow-xs transition-[border-color,box-shadow] duration-150",
         href && "hover:border-slate-300 hover:shadow-sm cursor-pointer"
       )}
     >
@@ -73,7 +73,7 @@ export function Kpi({
       </div>
     </div>
   );
-  return href ? <Link href={href} className="block">{body}</Link> : body;
+  return href ? <Link href={href} className="block press rounded-xl focus-visible:outline-offset-4">{body}</Link> : body;
 }
 
 export function Delta({ value, goodWhen = "up" }: { value: number; goodWhen?: "up" | "down" }) {
@@ -160,7 +160,7 @@ export function Button({
     <button
       {...rest}
       className={cx(
-        "inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+        "inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg press transition-[color,background-color,border-color,box-shadow,transform] duration-150 disabled:opacity-50 disabled:cursor-not-allowed",
         v,
         className
       )}

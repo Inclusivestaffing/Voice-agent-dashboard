@@ -20,7 +20,8 @@ export default function AnalyticsControls({ bucket, compare, breakdown, breakdow
     start(() => router.push(`${path}?${n}`, { scroll: false }));
   };
   return (
-    <div className={cx("flex items-center gap-3 flex-wrap", pending && "opacity-60")}>
+    <div className="flex items-center gap-3 flex-wrap" aria-busy={pending}>
+      {pending && <div className="progress-bar" role="progressbar" aria-label="Updating charts" />}
       <label className="flex items-center gap-1.5 text-xs text-slate-600">
         <span className="font-semibold">Breakdown</span>
         <select
@@ -42,7 +43,7 @@ export default function AnalyticsControls({ bucket, compare, breakdown, breakdow
             onClick={() => set("bucket", id)}
             aria-pressed={bucket === id}
             className={cx(
-              "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
+              "px-2.5 py-1 text-xs font-medium rounded-md transition-colors",
               bucket === id
                 ? "bg-white text-slate-900 font-semibold shadow-xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"

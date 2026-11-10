@@ -32,7 +32,11 @@ const securityHeaders = [
   ...(isDev ? [] : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]),
 ];
 
+import { DEMO_QS } from "./lib/demo/range";
+
 const nextConfig: NextConfig = {
+  // Lets a local production build live beside a running dev server (which owns .next).
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
   // Native/binary packages must not be bundled.
   serverExternalPackages: ["ffmpeg-static", "puppeteer-core", "@sparticuz/chromium"],
@@ -42,12 +46,18 @@ const nextConfig: NextConfig = {
     "/w/**": ["./node_modules/ffmpeg-static/ffmpeg*"],
   },
   images: { remotePatterns: [{ protocol: "https", hostname: "**.supabase.co" }] },
-  experimental: { serverActions: { bodySizeLimit: "3mb" } },
+  experimental: {
+    serverActions: { bodySizeLimit: "3mb" },
+    // Keep visited pages in the client router cache so switching back to a tab is instant
+    // (server actions still invalidate it through revalidatePath).
+    staleTimes: { dynamic: 60, static: 300 },
+  },
   async redirects() {
     return [
       {
+        // Straight to the right place in one hop (no second redirect to add the demo's date range).
         source: "/",
-        destination: "/demo",
+        destination: process.env.NEXT_PUBLIC_SUPABASE_URL ? "/workspaces" : `/demo?${DEMO_QS}`,
         permanent: false,
       },
     ];

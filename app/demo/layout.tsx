@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { DEMO_QS } from "@/lib/demo/range";
 import DemoNav from "./DemoNav";
 import { InclusiveLogo } from "@/components/InclusiveLogo";
 import SidebarAccount from "@/components/navigation/SidebarAccount";
@@ -12,7 +13,7 @@ export default function DemoLayout({ children }: { children: React.ReactNode }) 
         <aside className="bg-white border-b lg:border-b-0 lg:border-r border-slate-200/90 lg:sticky lg:top-0 lg:h-screen flex flex-col shadow-xs z-20 overflow-y-auto">
           {/* Top Logo & Workspace Brand */}
           <div className="p-4 lg:p-5 border-b border-slate-200/80 shrink-0">
-            <InclusiveLogo href="/demo" className="h-10 w-auto max-w-[200px]" />
+            <InclusiveLogo href={`/demo?${DEMO_QS}`} className="h-10 w-auto max-w-[200px]" />
             <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between">
               <div className="min-w-0">
                 <div className="font-semibold text-xs text-slate-900 truncate">Open Water Marine</div>
