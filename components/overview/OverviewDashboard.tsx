@@ -33,7 +33,7 @@ export default function OverviewDashboard({ s, p, calls, range, timezone, agentN
         <p className="text-xs text-muted mt-1.5">Every call reviewed by Claude: what the caller needed, whether they got it, and why not.</p>
       </div>
 
-      <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-xs">
+      <div className="bg-white border border-slate-200/70 rounded-2xl p-5 shadow-card">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500" />
           <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">AI Executive Summary</span>
@@ -101,7 +101,7 @@ export default function OverviewDashboard({ s, p, calls, range, timezone, agentN
             series={[{ name: "Avg duration", data: durByOutcome.map((k) => s.duration_by_outcome[k]) }]} height={Math.max(180, durByOutcome.length * 34)} />
         </Card>
         <Card title="Conversation quality" sub="Measured from word timestamps and call audio">
-          <div className="grid grid-cols-2 gap-px bg-line border border-line">
+          <div className="grid grid-cols-2 gap-px bg-line border border-line rounded-xl">
             <Mini label="Time to first word" value={s.conversation.avg_time_to_first_word_s == null ? "—" : `${s.conversation.avg_time_to_first_word_s.toFixed(1)}s`} />
             <Mini label="Agent response gap" value={s.conversation.avg_response_gap_s == null ? "—" : `${s.conversation.avg_response_gap_s.toFixed(1)}s`} />
             <Mini label="Interruptions per call" value={s.conversation.avg_interruptions == null ? "—" : s.conversation.avg_interruptions.toFixed(1)} />

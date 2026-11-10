@@ -18,14 +18,14 @@ export default function ReportForm({ slug, agents }: { slug: string; agents: { i
     ["Last 30 days", () => [new Date(+now - 30 * 864e5), now]],
     ["Last quarter", () => { const q = Math.floor(now.getMonth() / 3); return [new Date(now.getFullYear(), (q - 1) * 3, 1), new Date(now.getFullYear(), q * 3, 0)]; }],
   ];
-  const input = "mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm";
+  const input = "mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-xl";
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="slug" value={slug} />
       <div className="flex flex-wrap gap-1.5">
         {presets.map(([label, fn]) => (
           <button type="button" key={label} onClick={() => { const [a, b] = fn(); setFrom(iso(a)); setTo(iso(b)); }}
-            className="px-3 py-1.5 text-xs font-medium border border-line-strong text-dim hover:text-ink">{label}</button>
+            className="px-3 py-1.5 text-xs font-medium border border-line-strong text-dim hover:text-ink rounded-xl">{label}</button>
         ))}
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

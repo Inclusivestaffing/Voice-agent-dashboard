@@ -17,13 +17,13 @@ export default function CreateWorkspaceForm() {
         hint="Stored encrypted (AES-256). You can also add it later in Settings." />
       <label className="block">
         <span className="eyebrow">Timezone</span>
-        <select name="timezone" defaultValue="America/Chicago" className="mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm">
+        <select name="timezone" defaultValue="America/Chicago" className="mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-xl">
           {TIMEZONES.map((t) => <option key={t}>{t}</option>)}
         </select>
       </label>
       <label className="block">
         <span className="eyebrow">Import history</span>
-        <select name="backfill_days" defaultValue="30" className="mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm">
+        <select name="backfill_days" defaultValue="30" className="mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-xl">
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
           <option value="90">Last 90 days</option>
@@ -42,7 +42,7 @@ function Field({ label, hint, className, ...rest }: React.InputHTMLAttributes<HT
   return (
     <label className={`block ${className ?? ""}`}>
       <span className="eyebrow">{label}</span>
-      <input {...rest} className="mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm" />
+      <input {...rest} className="mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-xl" />
       {hint && <span className="block text-xs text-muted mt-1">{hint}</span>}
     </label>
   );

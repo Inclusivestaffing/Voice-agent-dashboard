@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getWorkspace, filterOptions } from "@/lib/db/queries";
 import { Card, Empty, fmtDate } from "@/components/ui";
 import ReportForm from "./ReportForm";
-import { TopTabBar } from "@/components/navigation/TopTabBar";
 import { canEdit } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +25,6 @@ export default async function ReportsPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
 
-      <TopTabBar basePath={`/w/${slug}`} />
 
       {canEdit(role) && (
         <Card title="Generate a report" className="mb-6">
@@ -34,7 +32,7 @@ export default async function ReportsPage({ params }: { params: Promise<{ slug: 
         </Card>
       )}
       {(reports ?? []).length === 0 ? <Empty title="No reports yet" /> : (
-        <div className="border border-line bg-surface divide-y divide-line">
+        <div className="border border-line bg-surface divide-y divide-line rounded-2xl overflow-hidden">
           {(reports ?? []).map((r) => (
             <Link key={r.id} href={`/w/${slug}/reports/${r.id}`} className="flex items-center justify-between gap-4 p-4 hover:bg-surface-2">
               <div className="min-w-0">

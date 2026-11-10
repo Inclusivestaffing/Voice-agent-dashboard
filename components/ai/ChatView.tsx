@@ -238,7 +238,7 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
         {/* Top Header */}
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-3 bg-white shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="h-8 w-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0">
+            <span className="h-8 w-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0">
               ✨
             </span>
             <div className="min-w-0">
@@ -261,7 +261,7 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
               onClick={() => setShowHistory(!showHistory)}
               title="Chat History"
               className={cx(
-                "p-1.5 rounded-lg border text-xs font-medium flex items-center gap-1 transition",
+                "p-1.5 rounded-xl border text-xs font-medium flex items-center gap-1 transition",
                 showHistory
                   ? "bg-slate-100 border-slate-300 text-slate-900"
                   : "border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
@@ -276,7 +276,7 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
 
             <button
               onClick={startNewChat}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 text-xs font-semibold shadow-xs transition"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-semibold shadow-xs transition"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -287,7 +287,7 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
               aria-label="Close Ask AI"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -320,9 +320,9 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
                     setShowHistory(false);
                   }}
                   className={cx(
-                    "flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition",
+                    "flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition",
                     active
-                      ? "bg-white text-slate-900 border border-slate-300 shadow-xs"
+                      ? "bg-white text-slate-900 border border-slate-300 shadow-xs rounded-xl"
                       : "text-slate-600 hover:bg-slate-200/60"
                   )}
                 >
@@ -339,7 +339,7 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
                     <button
                       onClick={(e) => deleteSession(sess.id, e)}
                       title="Delete chat"
-                      className="p-1 hover:text-rose-600 text-slate-400 rounded"
+                      className="p-1 hover:text-rose-600 text-slate-400 rounded-md"
                     >
                       <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polyline points="3 6 5 6 21 6" />
@@ -358,8 +358,8 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
           {messages.length === 0 ? (
             <div className="py-6 space-y-6">
               {/* Welcoming Card */}
-              <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-xl mx-auto shadow-xs font-bold">
+              <div className="bg-white border border-slate-200/70 rounded-2xl p-5 shadow-card text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-xl mx-auto shadow-card font-bold">
                   ✨
                 </div>
                 <div>
@@ -382,7 +382,7 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
                     <button
                       key={idx}
                       onClick={() => handleSend(item.q)}
-                      className="w-full text-left bg-white hover:bg-purple-50/40 border border-slate-200/90 hover:border-purple-300 rounded-xl p-3.5 transition group shadow-xs flex items-start gap-3"
+                      className="w-full text-left bg-white hover:bg-purple-50/40 border border-slate-200/70 hover:border-purple-300 rounded-2xl p-3.5 transition group shadow-card flex items-start gap-3"
                     >
                       <span className="text-lg shrink-0 mt-0.5">{item.icon}</span>
                       <div className="min-w-0 flex-1">
@@ -418,7 +418,7 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
 
                     <div
                       className={cx(
-                        "rounded-2xl px-4 py-3 text-sm max-w-[92%] leading-relaxed shadow-xs relative group",
+                        "rounded-2xl px-4 py-3 text-sm max-w-[92%] leading-relaxed shadow-card relative group",
                         isUser
                           ? "bg-slate-900 text-white rounded-tr-xs"
                           : "bg-white border border-slate-200/90 text-slate-800 rounded-tl-xs"
@@ -452,7 +452,7 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
 
               {loading && (
                 <div className="flex items-start gap-2.5">
-                  <div className="rounded-2xl px-4 py-3 bg-white border border-slate-200/90 text-slate-500 text-sm shadow-xs flex items-center gap-3">
+                  <div className="rounded-2xl px-4 py-3 bg-white border border-slate-200/70 text-slate-500 text-sm shadow-card flex items-center gap-3">
                     <div className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-purple-600 animate-bounce" />
                       <span className="w-2 h-2 rounded-full bg-purple-600 animate-bounce [animation-delay:0.2s]" />
@@ -487,13 +487,13 @@ export default function ChatView({ isOpen, onClose, workspaceId = "demo", initia
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about calls, latency, drop-offs, or improvements…"
                 disabled={loading}
-                className="w-full pl-4 pr-12 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600/30 focus:border-purple-600 transition"
+                className="w-full pl-4 pr-12 py-2.5 bg-slate-50 border border-slate-200/70 rounded-2xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600/30 focus:border-purple-600 transition"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
                 className={cx(
-                  "absolute right-1.5 p-1.5 rounded-lg text-white transition",
+                  "absolute right-1.5 p-1.5 rounded-xl text-white transition",
                   input.trim() && !loading
                     ? "bg-slate-900 hover:bg-slate-800"
                     : "bg-slate-300 cursor-not-allowed opacity-60"

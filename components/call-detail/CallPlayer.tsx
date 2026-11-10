@@ -96,7 +96,7 @@ export default function CallPlayer({ recordingUrl, multiChannelUrl, segments, ev
   return (
     <SeekCtx.Provider value={seek}>
       <div className="grid xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-5">
-        <section className="bg-surface border border-line min-w-0">
+        <section className="bg-surface border border-line min-w-0 rounded-2xl">
           <div className="p-4 border-b border-line">
             <h2 className="section-title mb-3">Recording</h2>
             {src ? (
@@ -106,7 +106,7 @@ export default function CallPlayer({ recordingUrl, multiChannelUrl, segments, ev
                 {waveOk && (
                   <div className="flex items-center gap-3 mt-2">
                     <button onClick={() => (playing ? audioRef.current?.pause() : audioRef.current?.play())}
-                      className="bg-ink text-bg px-3 py-1.5 text-xs font-medium w-20">{playing ? "Pause" : "Play"}</button>
+                      className="bg-ink text-bg px-3 py-1.5 text-xs font-medium w-20 rounded-xl">{playing ? "Pause" : "Play"}</button>
                     <span className="text-xs tabular text-dim">{fmt(time)} / {fmt(total)}</span>
                     {[1, 1.5, 2].map((r) => (
                       <button key={r} onClick={() => { if (audioRef.current) audioRef.current.playbackRate = r; }} className="text-xs text-dim hover:text-ink">{r}×</button>
@@ -169,12 +169,12 @@ export default function CallPlayer({ recordingUrl, multiChannelUrl, segments, ev
                 <div key={i} data-idx={i} className={cx("flex", s.role === "agent" ? "justify-start" : "justify-end")}>
                   <button onClick={() => seek(s.start)}
                     className={cx("text-left max-w-[88%] px-3 py-2 text-[13px] leading-relaxed transition",
-                      s.role === "agent" ? "bg-surface-2 border-l-2 border-line-strong text-ink" : "bg-surface-3 border-r-2 border-dim",
+                      s.role === "agent" ? "bg-surface-2 text-ink rounded-2xl rounded-tl-md" : "bg-slate-900/[.06] text-ink rounded-2xl rounded-tr-md",
                       s.backchannel && "opacity-60",
-                      i === activeIdx && "ring-2 ring-ink")}>
+                      i === activeIdx && "ring-2 ring-slate-900/70")}>
                     <div className="flex items-center gap-2 text-xs font-medium text-dim mb-0.5">
                       <span>{s.role === "agent" ? agentName : "Caller"}</span><span className="tabular">{fmt(s.start)}</span>
-                      {evHere.map((e, j) => <span key={j} className={cx("px-1 text-black", EVENT_STYLE[e.kind]?.cls)}>{EVENT_STYLE[e.kind]?.label}</span>)}
+                      {evHere.map((e, j) => <span key={j} className={cx("px-1.5 rounded-md text-black", EVENT_STYLE[e.kind]?.cls)}>{EVENT_STYLE[e.kind]?.label}</span>)}
                     </div>
                     {s.text}
                   </button>
@@ -193,7 +193,7 @@ export function SeekTime({ at, children }: { at: number; children?: React.ReactN
   const seek = useSeek();
   if (at < 0) return null;
   return (
-    <button onClick={() => seek(Math.max(0, at - 1))} className="text-xs font-medium text-dim bg-surface-2 border border-line-strong px-1.5 py-0.5 hover:bg-surface-3 hover:text-ink shrink-0">
+    <button onClick={() => seek(Math.max(0, at - 1))} className="text-xs font-medium text-dim bg-surface-2 border border-line-strong px-1.5 py-0.5 hover:bg-surface-3 hover:text-ink shrink-0 rounded-lg">
       {children ?? fmt(at)} ▶
     </button>
   );

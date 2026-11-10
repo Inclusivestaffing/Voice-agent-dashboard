@@ -68,9 +68,9 @@ export default function RetellAnalytics({ calls, prevCalls, range, prevRange, ti
   const sub = breakdown ? `By ${RETELL_BREAKDOWNS.find((b) => b.id === breakdown)?.label ?? humanize(breakdown.replace("custom:", ""))}` : `Per ${bucket}`;
 
   const Big = ({ label, value }: { label: string; value: string }) => (
-    <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-xs">
+    <div className="bg-white border border-slate-200/70 rounded-2xl p-5 shadow-card">
       <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</div>
-      <div className="mt-3 bg-slate-50/80 border border-slate-100 rounded-lg py-8 text-center text-[32px] font-bold text-slate-900 tabular tracking-wide">{value}</div>
+      <div className="mt-3 bg-slate-50/80 border border-slate-100 rounded-xl py-8 text-center text-[32px] font-bold text-slate-900 tabular tracking-wide">{value}</div>
     </div>
   );
 

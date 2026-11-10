@@ -5,6 +5,7 @@ import { demoCalls, filterDemo, demoFilterOptions, DEMO_TZ } from "@/lib/demo/op
 import { demoFilters } from "@/lib/demo/params";
 import FilterBar from "@/components/filters/FilterBar";
 import CallHistoryTable from "@/components/calls/CallHistoryTable";
+import ExportRowsButton from "@/components/calls/ExportRowsButton";
 import { Empty } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function DemoCalls({ searchParams }: { searchParams: Promis
     const x = key(a), y = key(b);
     return (x < y ? -1 : x > y ? 1 : 0) * (dir === "asc" ? 1 : -1);
   });
+  const historyRows = rows.map(toHistoryRow);
   const base = filtersToQuery(f);
   const nav = new URLSearchParams(base); nav.set("sort", sort); nav.set("dir", dir);
 
@@ -35,7 +37,10 @@ export default async function DemoCalls({ searchParams }: { searchParams: Promis
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Open Water Marine · AI Voice Receptionist</div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">Call History</h1>
         </div>
-        <span className="text-xs font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full">{rows.length} calls recorded</span>
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full">{rows.length} calls recorded</span>
+          <ExportRowsButton rows={historyRows} name="open-water-marine-calls" />
+        </div>
       </div>
 
       <Suspense><FilterBar workspaceId="demo" compact options={demoFilterOptions()} /></Suspense>
@@ -43,7 +48,7 @@ export default async function DemoCalls({ searchParams }: { searchParams: Promis
       {rows.length === 0 ? (
         <Empty title="No calls match these filters" />
       ) : (
-        <CallHistoryTable rows={rows.map(toHistoryRow)} timezone={DEMO_TZ} detailBase="/demo/calls" navQuery={nav.toString()} sortBase={base} sort={sort} dir={dir} />
+        <CallHistoryTable rows={historyRows} timezone={DEMO_TZ} detailBase="/demo/calls" navQuery={nav.toString()} sortBase={base} sort={sort} dir={dir} />
       )}
     </>
   );

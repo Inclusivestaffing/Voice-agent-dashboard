@@ -2,6 +2,9 @@ import { Suspense } from "react";
 import { DEMO_QS } from "@/lib/demo/range";
 import DemoNav from "./DemoNav";
 import { InclusiveLogo } from "@/components/InclusiveLogo";
+import CommandPalette from "@/components/command/CommandPalette";
+import SearchTrigger from "@/components/command/SearchTrigger";
+import Toaster from "@/components/feedback/Toaster";
 import SidebarAccount from "@/components/navigation/SidebarAccount";
 import { AppProvider } from "@/components/context/AppContext";
 
@@ -26,6 +29,11 @@ export default function DemoLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           {/* Navigation Links */}
+          {/* Command palette trigger */}
+          <div className="hidden lg:block px-3 pt-3">
+            <SearchTrigger />
+          </div>
+
           <div className="flex-1 py-2">
             <Suspense fallback={<nav className="p-3 text-xs text-slate-400">Loading…</nav>}>
               <DemoNav />
@@ -43,6 +51,10 @@ export default function DemoLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
       </div>
+      <Suspense fallback={null}>
+        <CommandPalette basePath="/demo" />
+      </Suspense>
+      <Toaster />
     </AppProvider>
   );
 }

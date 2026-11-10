@@ -6,7 +6,6 @@ import { demoFilters } from "@/lib/demo/params";
 import FilterBar from "@/components/filters/FilterBar";
 import InsightsView from "@/components/insights/InsightsView";
 import { Empty } from "@/components/ui";
-import { TopTabBar } from "@/components/navigation/TopTabBar";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +27,6 @@ export default async function DemoInsights({ searchParams }: { searchParams: Pro
         </div>
       </div>
 
-      <TopTabBar basePath="/demo" />
 
       <Suspense><FilterBar workspaceId="demo" compact options={demoFilterOptions()} /></Suspense>
       {analyzed === 0 ? <Empty title="No analyzed calls in this period" /> : (

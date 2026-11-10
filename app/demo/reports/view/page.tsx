@@ -18,7 +18,7 @@ export default async function DemoReportView({ searchParams }: { searchParams: P
         <span className="text-xs text-muted">In a live workspace: Download PDF · Copy share link · Revoke link</span>
       </div>
       {snap.summary.total === 0 ? <Empty title="No calls in that period, so there's nothing to report." /> : (
-        <div className="border border-line -mx-4 sm:mx-0">
+        <div className="border border-line -mx-4 sm:mx-0 rounded-2xl overflow-hidden">
           <ReportView snap={snap} narrative={ruleNarrative(snap)} />
         </div>
       )}

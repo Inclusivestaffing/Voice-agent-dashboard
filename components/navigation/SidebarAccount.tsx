@@ -27,13 +27,13 @@ export default function SidebarAccount({
       <button
         type="button"
         onClick={() => openAskAi()}
-        className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold rounded-lg bg-purple-50 text-purple-900 hover:bg-purple-100/80 border border-purple-200/80 transition shadow-xs group"
+        className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold rounded-xl bg-purple-50 text-purple-900 hover:bg-purple-100/80 border border-purple-200/80 transition shadow-xs group"
       >
         <div className="flex items-center gap-2">
           <span className="text-base text-purple-600 group-hover:scale-110 transition-transform">✨</span>
           <span>Ask AI Analyst</span>
         </div>
-        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-200/60 text-purple-800">
+        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-purple-200/60 text-purple-800">
           Chat
         </span>
       </button>
@@ -41,10 +41,10 @@ export default function SidebarAccount({
       {/* Clean Account Profile Card (Clicking goes to Settings where controls live) */}
       <Link
         href={settingsHref}
-        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-100/80 border border-transparent hover:border-slate-200 transition group text-left"
+        className="w-full flex items-center gap-2.5 p-2.5 rounded-2xl hover:bg-slate-100/80 border border-transparent hover:border-slate-200 transition group text-left"
         title="Manage account & role controls in Settings"
       >
-        <div className="h-8 w-8 rounded-lg bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+        <div className="h-8 w-8 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
           IS
         </div>
         <div className="min-w-0 flex-1">
@@ -52,7 +52,7 @@ export default function SidebarAccount({
             <span className="text-xs font-bold text-slate-900 truncate group-hover:text-slate-950">
               {name}
             </span>
-            <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-slate-100 border border-slate-200 text-slate-600">
+            <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded-md bg-slate-100 border border-slate-200 text-slate-600">
               {ROLE_LABEL[role]}
             </span>
           </div>

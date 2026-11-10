@@ -52,7 +52,7 @@ export default function AccountMenu({ email, actualRole, role, basePath, demo, p
         aria-expanded={open}
         aria-haspopup="menu"
         className={cx(
-          "w-full flex items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-left transition hover:bg-slate-100",
+          "w-full flex items-center gap-2.5 rounded-xl border border-transparent px-2 py-1.5 text-left transition hover:bg-slate-100",
           open && "bg-slate-100", pending && "opacity-60"
         )}
       >
@@ -68,7 +68,7 @@ export default function AccountMenu({ email, actualRole, role, basePath, demo, p
         <div
           role="menu"
           className={cx(
-            "absolute z-50 w-72 bg-white border border-[#d5d5e8] rounded-xl shadow-lg p-1.5",
+            "absolute z-50 w-72 bg-white border border-[#d5d5e8] rounded-2xl shadow-pop p-1.5",
             placement === "up" ? "bottom-full mb-2 left-0" : "top-full mt-2 right-0"
           )}
         >
@@ -89,7 +89,7 @@ export default function AccountMenu({ email, actualRole, role, basePath, demo, p
                 role="menuitemradio"
                 aria-checked={on}
                 onClick={() => viewAs(r)}
-                className={cx("w-full flex items-start gap-2.5 rounded-lg px-3 py-2 text-left transition", on ? "bg-slate-100" : "hover:bg-slate-50")}
+                className={cx("w-full flex items-start gap-2.5 rounded-xl px-3 py-2 text-left transition", on ? "bg-slate-100" : "hover:bg-slate-50")}
               >
                 <span className={cx("mt-0.5 h-4 w-4 shrink-0 rounded-full border grid place-items-center", on ? "border-slate-900 bg-slate-900" : "border-slate-300")}>
                   {on && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
@@ -104,20 +104,20 @@ export default function AccountMenu({ email, actualRole, role, basePath, demo, p
 
           <div className="border-t border-slate-100 mt-1 pt-1">
             {!demo && canEdit(actualRole) && (
-              <Link role="menuitem" href={`${basePath}/settings#team`} onClick={() => setOpen(false)} className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+              <Link role="menuitem" href={`${basePath}/settings#team`} onClick={() => setOpen(false)} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                 <svg className="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                 Manage team &amp; roles
               </Link>
             )}
             {!demo && (
-              <Link role="menuitem" href="/workspaces" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+              <Link role="menuitem" href="/workspaces" className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                 <svg className="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></svg>
                 Switch workspace
               </Link>
             )}
             {!demo ? (
               <form action={signOut}>
-                <button role="menuitem" type="submit" className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                <button role="menuitem" type="submit" className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                   <svg className="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
                   Sign out
                 </button>

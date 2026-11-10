@@ -12,6 +12,8 @@ import * as echarts from "echarts/core";
 import { BarChart, LineChart, PieChart } from "echarts/charts";
 import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
+import { createPortal } from "react-dom";
+import { toast } from "@/components/feedback/Toaster";
 
 echarts.use([BarChart, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer]);
 
@@ -39,6 +41,8 @@ export interface ChartProps {
   /** Donut legend placement: beside the ring (wide cards) or below it (narrow cards). */
   legendPosition?: "right" | "bottom";
   onSelect?: (category: string, seriesName: string) => void;
+  /** Hover toolbar: expand, download PNG, download CSV (off inside the expanded view). */
+  toolbar?: boolean;
 }
 
 const SLOTS = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6", "--s7", "--s8"];
@@ -107,7 +111,10 @@ export function formatValue(v: number | null | undefined, unit?: string): string
   return `${r.toLocaleString()}${unit ?? ""}`;
 }
 
-export default function Chart({ kind, categories, series, unit, height = 260, labels = "auto", sliceColors, ariaLabel, legendPosition = "right", onSelect }: ChartProps) {
+export default function Chart(props: ChartProps) {
+  const { kind, categories, series, unit, height = 260, labels = "auto", sliceColors, ariaLabel, legendPosition = "right", onSelect, toolbar = true } = props;
+  const ec = useRef<ReactEChartsCore>(null);
+  const [expanded, setExpanded] = useState(false);
   const t = useTokens();
   const { ref, visible } = useNearViewport<HTMLDivElement>();
   const option = useMemo(() => {
@@ -117,13 +124,13 @@ export default function Chart({ kind, categories, series, unit, height = 260, la
       ? { animation: false }
       : { animationDuration: 300, animationEasing: "cubicOut", animationDurationUpdate: 200, animationEasingUpdate: "cubicOut" };
     const color = (name: string | undefined, i: number) => t[name ?? ""] || t[SLOTS[i % SLOTS.length]];
-    const textStyle = { color: t["--text-dim"], fontFamily: "Inter, \"Inter Fallback\", system-ui, sans-serif", fontSize: 12 };
+    const textStyle = { color: t["--text-dim"], fontFamily: "Inter, 'Inter Fallback', system-ui, sans-serif", fontSize: 12 };
     const tooltip = {
       backgroundColor: t["--surface"], borderColor: t["--border"], borderWidth: 1,
       textStyle: { color: t["--text"], fontSize: 12 }, extraCssText: "box-shadow:0 6px 24px rgba(0,0,0,.12);border-radius:6px;",
     };
     const multi = series.length >= 2;
-    const legend = multi ? { type: "plain", top: 0, left: 0, right: 0, icon: "roundRect", itemWidth: 10, itemHeight: 10, itemGap: 10, textStyle } : undefined;
+    const legend = multi ? { type: "plain", top: 0, left: 0, right: toolbar ? 88 : 0, icon: "roundRect", itemWidth: 10, itemHeight: 10, itemGap: 10, textStyle } : undefined;
     // Reserve room for a wrapped legend: ~3 short names fit per row in a narrow card.
     const legendRows = multi ? Math.ceil(series.length / 2) : 0;
 
@@ -211,15 +218,29 @@ export default function Chart({ kind, categories, series, unit, height = 260, la
       yAxis: horizontal ? { ...catAxis, inverse: true } : valAxis,
       series: s,
     };
-  }, [t, kind, categories, series, unit, labels, sliceColors, legendPosition]);
+  }, [t, kind, categories, series, unit, labels, sliceColors, legendPosition, toolbar]);
 
   // Reserve the chart's exact height before it draws, so nothing below it jumps.
   if (!option || !visible) {
-    return <div ref={ref} role="img" aria-label={ariaLabel} aria-busy="true" style={{ height }} className="skeleton rounded-lg opacity-60" />;
+    return <div ref={ref} role="img" aria-label={ariaLabel} aria-busy="true" style={{ height }} className="skeleton rounded-xl opacity-60" />;
   }
   return (
-    <div ref={ref} role="img" aria-label={ariaLabel} className="chart-enter">
+    <div ref={ref} className="chart-enter group/chart relative">
+      {toolbar && (
+        <ChartToolbar
+          onExpand={() => setExpanded(true)}
+          onPng={() => downloadPng(ec.current, ariaLabel)}
+          onCsv={() => downloadCsv(kind, categories, series, ariaLabel)}
+        />
+      )}
+      {expanded && (
+        <ExpandedChart title={ariaLabel} onClose={() => setExpanded(false)}>
+          <Chart {...props} toolbar={false} height={Math.max(320, Math.min(560, Math.round(window.innerHeight * 0.6)))} />
+        </ExpandedChart>
+      )}
+      <div role="img" aria-label={ariaLabel}>
       <ReactEChartsCore
+        ref={ec}
         echarts={echarts}
         option={option}
         style={{ height, width: "100%" }}
@@ -228,6 +249,93 @@ export default function Chart({ kind, categories, series, unit, height = 260, la
         opts={{ renderer: "svg" }}
         onEvents={onSelect ? { click: (p: { name: string; seriesName: string }) => onSelect(p.name, p.seriesName) } : undefined}
       />
+      </div>
     </div>
+  );
+}
+
+// ───────────── Chart toolbar: expand, PNG, CSV ─────────────
+
+const fileName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "chart";
+
+function saveBlob(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  document.body.appendChild(a); a.click(); a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Rasterise the chart's SVG at 2x on a white background. */
+function downloadPng(chart: ReactEChartsCore | null, title: string) {
+  const inst = chart?.getEchartsInstance();
+  if (!inst) return;
+  const svgUrl = inst.getDataURL({ type: "svg", backgroundColor: "#ffffff" });
+  const w = inst.getWidth(), h = inst.getHeight(), scale = 2;
+  const img = new Image();
+  img.onload = () => {
+    const c = Object.assign(document.createElement("canvas"), { width: w * scale, height: h * scale });
+    const g = c.getContext("2d")!;
+    g.fillStyle = "#ffffff"; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob((b) => { if (b) { saveBlob(b, `${fileName(title)}.png`); toast("Chart downloaded"); } }, "image/png");
+  };
+  img.onerror = () => toast("Couldn't export this chart", "error");
+  img.src = svgUrl;
+}
+
+/** The chart's numbers as CSV (guarded against spreadsheet formula injection). */
+function downloadCsv(kind: ChartKind, categories: string[], series: ChartSeries[], title: string) {
+  const cell = (v: unknown) => {
+    let s = v === null || v === undefined ? "" : String(v);
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const cols = kind === "donut" ? ["Value"] : series.map((x) => x.name);
+  const rows = [["Category", ...cols], ...categories.map((c, i) => [c, ...series.slice(0, cols.length).map((x) => x.data[i])])];
+  saveBlob(new Blob([rows.map((r) => r.map(cell).join(",")).join("\n")], { type: "text/csv;charset=utf-8" }), `${fileName(title)}.csv`);
+  toast("Data downloaded");
+}
+
+function ToolButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={onClick} aria-label={label} title={label}
+      className="grid h-7 w-7 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900">
+      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{children}</svg>
+    </button>
+  );
+}
+
+function ChartToolbar({ onExpand, onPng, onCsv }: { onExpand: () => void; onPng: () => void; onCsv: () => void }) {
+  return (
+    <div className="absolute -top-1 right-0 z-10 flex items-center gap-0.5 rounded-xl border border-slate-200/70 bg-white/95 p-0.5 opacity-0 shadow-card backdrop-blur transition-opacity duration-150 group-hover/chart:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
+      <ToolButton label="Expand chart" onClick={onExpand}><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></ToolButton>
+      <ToolButton label="Download as PNG" onClick={onPng}><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></ToolButton>
+      <ToolButton label="Download data (CSV)" onClick={onCsv}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5M12 15V3" /></ToolButton>
+    </div>
+  );
+}
+
+function ExpandedChart({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [onClose]);
+  return createPortal(
+    <div className="fixed inset-0 z-[72] flex items-center justify-center p-4 sm:p-8" role="presentation">
+      <div className="palette-fade absolute inset-0 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-label={title} className="palette-in relative w-full max-w-6xl rounded-3xl border border-slate-200/70 bg-white p-6 shadow-pop">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900">{title}</h2>
+          <button onClick={onClose} autoFocus aria-label="Close" className="grid h-9 w-9 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>,
+    document.body
   );
 }

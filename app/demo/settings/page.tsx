@@ -58,7 +58,7 @@ export default function DemoSettingsPage() {
               <span className="text-slate-400 block mb-1">Supported Capabilities</span>
               <div className="flex flex-wrap gap-1.5">
                 {["Inbound Call Reception", "Service Scheduling", "Emergency Escalation", "Quote Qualification", "Live Transfers"].map((cap) => (
-                  <span key={cap} className="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-medium text-[11px]">
+                  <span key={cap} className="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-medium text-[11px]">
                     {cap}
                   </span>
                 ))}
@@ -73,12 +73,12 @@ export default function DemoSettingsPage() {
           sub="Voice agent telemetry, real-time webhooks, and call sync"
         >
           <div className="space-y-4 text-xs">
-            <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200/80 rounded-2xl">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="font-semibold text-emerald-900">Retell API Connected</span>
               </div>
-              <span className="text-[11px] font-mono text-emerald-800 bg-white/80 px-2 py-0.5 rounded border border-emerald-200">
+              <span className="text-[11px] font-mono text-emerald-800 bg-white/80 px-2 py-0.5 rounded-md border border-emerald-200">
                 retell_live_••••••48
               </span>
             </div>
@@ -87,7 +87,7 @@ export default function DemoSettingsPage() {
               <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">
                 Real-Time Webhook URL
               </label>
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono text-[11px] text-slate-700 break-all select-all">
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-2.5 font-mono text-[11px] text-slate-700 break-all select-all">
                 https://analytics.inclusivestaffing.com/api/webhooks/retell/open-water
               </div>
               <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
@@ -103,7 +103,7 @@ export default function DemoSettingsPage() {
           sub="Visual theme separation between internal system and client reports"
         >
           <div className="space-y-3.5 text-xs">
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-slate-800">Internal Dashboard UI</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-800">
@@ -115,7 +115,7 @@ export default function DemoSettingsPage() {
               </p>
             </div>
 
-            <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-2">
+            <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-amber-900">Client Reports & Exports</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/30 text-amber-950 border border-amber-300">

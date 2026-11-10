@@ -40,20 +40,20 @@ export default function CallDetailView({ call, raw, metrics, analysis, timezone,
         </Link>
         <div className="flex items-center gap-1.5">
           {nav.prev ? (
-            <Link href={nav.prev} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition">
+            <Link href={nav.prev} className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition">
               ← Prev
             </Link>
           ) : (
-            <span className="rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-1.5 text-slate-300 cursor-not-allowed">
+            <span className="rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-1.5 text-slate-300 cursor-not-allowed">
               ← Prev
             </span>
           )}
           {nav.next ? (
-            <Link href={nav.next} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition">
+            <Link href={nav.next} className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition">
               Next →
             </Link>
           ) : (
-            <span className="rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-1.5 text-slate-300 cursor-not-allowed">
+            <span className="rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-1.5 text-slate-300 cursor-not-allowed">
               Next →
             </span>
           )}

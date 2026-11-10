@@ -4,6 +4,9 @@ import { getWorkspace } from "@/lib/db/queries";
 import { supabaseAdmin } from "@/lib/db/supabase";
 import NavLinks from "./NavLinks";
 import { InclusiveLogo } from "@/components/InclusiveLogo";
+import CommandPalette from "@/components/command/CommandPalette";
+import SearchTrigger from "@/components/command/SearchTrigger";
+import Toaster from "@/components/feedback/Toaster";
 import SidebarAccount from "@/components/navigation/SidebarAccount";
 import { AppProvider } from "@/components/context/AppContext";
 
@@ -34,9 +37,9 @@ export default async function WorkspaceLayout({
             <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between min-w-0">
               <div className="min-w-0 flex items-center gap-2">
                 {ws.logo_url ? (
-                  <img src={ws.logo_url} alt="" className="h-6 w-auto max-w-[48px] object-contain rounded" />
+                  <img src={ws.logo_url} alt="" className="h-6 w-auto max-w-[48px] object-contain rounded-md" />
                 ) : (
-                  <div className="h-6 w-6 shrink-0 rounded bg-slate-900 text-white font-semibold text-xs grid place-items-center">
+                  <div className="h-6 w-6 shrink-0 rounded-md bg-slate-900 text-white font-semibold text-xs grid place-items-center">
                     {ws.name.slice(0, 1)}
                   </div>
                 )}
@@ -54,6 +57,11 @@ export default async function WorkspaceLayout({
           </div>
 
           {/* Nav Links */}
+          {/* Command palette trigger */}
+          <div className="hidden lg:block px-3 pt-3">
+            <SearchTrigger />
+          </div>
+
           <div className="flex-1 py-2">
             <Suspense fallback={<nav className="p-3 text-xs text-slate-400">Loading…</nav>}>
               <NavLinks basePath={`/w/${slug}`} />
@@ -83,6 +91,10 @@ export default async function WorkspaceLayout({
           {children}
         </main>
       </div>
+      <Suspense fallback={null}>
+        <CommandPalette basePath={`/w/${slug}`} />
+      </Suspense>
+      <Toaster />
     </AppProvider>
   );
 }

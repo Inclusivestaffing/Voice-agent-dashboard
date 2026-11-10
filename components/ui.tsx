@@ -20,7 +20,7 @@ export function Card({
   action?: ReactNode;
 }) {
   return (
-    <section className={cx("bg-white border border-slate-200/90 rounded-xl shadow-xs p-5 min-w-0", className)}>
+    <section className={cx("bg-white border border-slate-200/70 rounded-2xl shadow-card p-5 min-w-0", className)}>
       {(title || action) && (
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="min-w-0">
@@ -57,11 +57,11 @@ export function Kpi({
   const body = (
     <div
       className={cx(
-        "relative bg-white border border-slate-200/90 rounded-xl p-5 h-full shadow-xs transition-[border-color,box-shadow] duration-150",
-        href && "hover:border-slate-300 hover:shadow-sm cursor-pointer"
+        "relative bg-white border border-slate-200/70 rounded-2xl p-5 h-full shadow-card transition-[border-color,box-shadow] duration-150",
+        href && "hover:border-slate-300 hover:shadow-card-hover cursor-pointer"
       )}
     >
-      {tone === "bad" && <div className="absolute inset-x-0 top-0 h-[3px] bg-rose-500 rounded-t-xl" />}
+      {tone === "bad" && <div className="absolute inset-x-0 top-0 h-[3px] bg-rose-500 rounded-t-2xl" />}
       <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</div>
       <div className={cx("text-[30px] font-bold tracking-tight text-slate-900 mt-2 leading-none", tone === "bad" && "text-rose-600")}>
         {value}
@@ -73,7 +73,7 @@ export function Kpi({
       </div>
     </div>
   );
-  return href ? <Link href={href} className="block press rounded-xl focus-visible:outline-offset-4">{body}</Link> : body;
+  return href ? <Link href={href} className="block press rounded-2xl focus-visible:outline-offset-4">{body}</Link> : body;
 }
 
 export function Delta({ value, goodWhen = "up" }: { value: number; goodWhen?: "up" | "down" }) {
@@ -109,14 +109,14 @@ export function KpiGrid({ children, cols = 6 }: { children: ReactNode; cols?: nu
 }
 
 const OUTCOME_PILL: Record<string, string> = {
-  booked: "bg-emerald-50 text-emerald-700 border border-emerald-200/80",
-  transfer_ok: "bg-sky-50 text-sky-700 border border-sky-200/80",
-  transfer_fail: "bg-rose-50 text-rose-700 border border-rose-200/80",
-  lead_captured: "bg-purple-50 text-purple-700 border border-purple-200/80",
-  info: "bg-slate-100 text-slate-700 border border-slate-200",
-  silent: "text-slate-400 border border-dashed border-slate-300",
+  booked: "bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-xl",
+  transfer_ok: "bg-sky-50 text-sky-700 border border-sky-200/80 rounded-xl",
+  transfer_fail: "bg-rose-50 text-rose-700 border border-rose-200/80 rounded-xl",
+  lead_captured: "bg-purple-50 text-purple-700 border border-purple-200/80 rounded-xl",
+  info: "bg-slate-100 text-slate-700 border border-slate-200 rounded-xl",
+  silent: "text-slate-400 border border-dashed border-slate-300 rounded-xl",
   spam: "bg-slate-100 text-slate-400 line-through",
-  abusive: "bg-rose-50 text-rose-700 border border-rose-200",
+  abusive: "bg-rose-50 text-rose-700 border border-rose-200 rounded-xl",
   voicemail: "bg-slate-100 text-slate-500",
   no_data: "text-slate-400",
 };
@@ -133,7 +133,7 @@ export function OutcomePill({ outcome }: { outcome?: string | null }) {
 export function RootCauseTag({ cause }: { cause?: string | null }) {
   if (!cause || cause === "none") return null;
   return (
-    <span className="inline-block px-2 py-0.5 text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200/80 rounded-md whitespace-nowrap">
+    <span className="inline-block px-2 py-0.5 text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200/80 rounded-lg whitespace-nowrap">
       {ROOT_CAUSE_LABEL[cause as RootCause] ?? cause}
     </span>
   );
@@ -152,7 +152,7 @@ export function Button({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "dark" | "danger" }) {
   const v = {
     primary: "bg-slate-900 text-white hover:bg-slate-800 shadow-xs",
-    ghost: "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-2xs",
+    ghost: "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-2xs rounded-xl",
     dark: "bg-slate-900 text-white hover:bg-slate-800 shadow-xs",
     danger: "bg-rose-600 text-white hover:bg-rose-700 shadow-xs",
   }[variant];
@@ -160,7 +160,7 @@ export function Button({
     <button
       {...rest}
       className={cx(
-        "inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg press transition-[color,background-color,border-color,box-shadow,transform] duration-150 disabled:opacity-50 disabled:cursor-not-allowed",
+        "inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl press transition-[color,background-color,border-color,box-shadow,transform] duration-150 disabled:opacity-50 disabled:cursor-not-allowed",
         v,
         className
       )}
@@ -174,7 +174,7 @@ export function Insight({ children, tone = "brand" }: { children: ReactNode; ton
   return (
     <div
       className={cx(
-        "mt-4 rounded-xl border px-4 py-3 text-[13px] leading-relaxed shadow-2xs",
+        "mt-4 rounded-xl border px-4 py-3 text-[13px] leading-relaxed",
         tone === "bad"
           ? "border-rose-200 bg-rose-50/60 text-rose-900"
           : "border-slate-200 bg-slate-50/80 text-slate-800"
@@ -187,7 +187,7 @@ export function Insight({ children, tone = "brand" }: { children: ReactNode; ton
 
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="border border-dashed border-slate-200 rounded-xl bg-white p-12 text-center shadow-xs">
+    <div className="border border-dashed border-slate-200 rounded-2xl bg-white p-12 text-center shadow-card">
       <div className="font-semibold text-slate-800 text-base">{title}</div>
       {children && <div className="text-sm text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">{children}</div>}
     </div>

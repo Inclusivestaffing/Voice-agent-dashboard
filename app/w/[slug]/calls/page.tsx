@@ -6,7 +6,6 @@ import { toHistoryRow } from "@/lib/callHistory";
 import FilterBar from "@/components/filters/FilterBar";
 import CallHistoryTable from "@/components/calls/CallHistoryTable";
 import { Empty } from "@/components/ui";
-import { TopTabBar } from "@/components/navigation/TopTabBar";
 
 export const dynamic = "force-dynamic";
 
@@ -39,10 +38,9 @@ export default async function CallsPage({ params, searchParams }: { params: Prom
         </div>
         <div className="flex items-center gap-3 text-xs text-dim">
           <span>{total.toLocaleString()} calls</span>
-          <a href={`/api/w/${ws.id}/export?${base}`} className="border border-line-strong bg-surface px-3 py-1.5 font-medium hover:text-ink">Export CSV</a>
+          <a href={`/api/w/${ws.id}/export?${base}`} className="border border-line-strong bg-surface px-3 py-1.5 font-medium hover:text-ink rounded-xl">Export CSV</a>
         </div>
       </div>
-      <TopTabBar basePath={`/w/${slug}`} />
       <Suspense><FilterBar workspaceId={ws.id} options={options} savedViews={views ?? []} /></Suspense>
 
       {rows.length === 0 ? <Empty title="No calls match these filters" /> : (
@@ -51,8 +49,8 @@ export default async function CallsPage({ params, searchParams }: { params: Prom
           <div className="flex items-center justify-between mt-4 text-xs">
             <span className="text-dim">Showing {page * PAGE_SIZE + 1}–{Math.min(total, page * PAGE_SIZE + rows.length)} of {total.toLocaleString()}</span>
             <div className="flex gap-2">
-              {page > 0 && <Link href={pageLink(page - 1)} className="border border-line-strong px-3 py-1.5 bg-surface">← Prev</Link>}
-              {(page + 1) * PAGE_SIZE < total && <Link href={pageLink(page + 1)} className="border border-line-strong px-3 py-1.5 bg-surface">Next →</Link>}
+              {page > 0 && <Link href={pageLink(page - 1)} className="border border-line-strong px-3 py-1.5 bg-surface rounded-xl">← Prev</Link>}
+              {(page + 1) * PAGE_SIZE < total && <Link href={pageLink(page + 1)} className="border border-line-strong px-3 py-1.5 bg-surface rounded-xl">Next →</Link>}
             </div>
           </div>
         </>

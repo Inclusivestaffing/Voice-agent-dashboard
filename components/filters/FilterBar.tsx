@@ -7,6 +7,7 @@ import { OUTCOMES, OUTCOME_LABEL, ROOT_CAUSES, ROOT_CAUSE_LABEL } from "@/lib/ty
 import { cx, humanize } from "../ui";
 import { saveView, deleteView } from "@/app/actions";
 import { useApp } from "@/components/context/AppContext";
+import { toast } from "@/components/feedback/Toaster";
 
 export interface FieldOption { key: string; values: string[] }
 export interface FilterOptions {
@@ -134,7 +135,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
               }}
               aria-expanded={dateOpen}
               className={cx(
-                "inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition shadow-xs",
+                "inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-xl border transition shadow-xs",
                 dateOpen
                   ? "bg-slate-100 border-slate-400 text-slate-900 font-semibold"
                   : "bg-white border-slate-200/90 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
@@ -160,7 +161,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
 
             {/* Date Range Dropdown Popover */}
             {dateOpen && (
-              <div className="absolute left-0 mt-2 z-40 w-80 sm:w-96 bg-white border border-slate-200 rounded-xl shadow-xl p-4 space-y-3.5 animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute left-0 mt-2 z-40 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-pop p-4 space-y-3.5 animate-in fade-in zoom-in-95 duration-100">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                   <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">Select Date Range</span>
                   {timezone && (
@@ -189,7 +190,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
                           if (r.id !== "custom") setDateOpen(false);
                         }}
                         className={cx(
-                          "px-2.5 py-1.5 text-xs font-semibold rounded-lg border text-center transition",
+                          "px-2.5 py-1.5 text-xs font-semibold rounded-xl border text-center transition",
                           isSelected
                             ? "bg-slate-900 border-slate-900 text-white shadow-xs"
                             : "bg-slate-50/80 border-slate-200/80 text-slate-700 hover:bg-slate-100 hover:border-slate-300"
@@ -219,7 +220,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
                             if (!n.get("to")) n.set("to", e.target.value);
                             push(n);
                           }}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-slate-900"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-slate-900"
                         />
                       </div>
                       <div>
@@ -235,7 +236,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
                             if (!n.get("from")) n.set("from", e.target.value);
                             push(n);
                           }}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-slate-900"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-slate-900"
                         />
                       </div>
                     </div>
@@ -247,7 +248,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
                   <button
                     type="button"
                     onClick={() => setDateOpen(false)}
-                    className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-xs transition"
+                    className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-xs transition"
                   >
                     Done
                   </button>
@@ -266,7 +267,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
               }}
               aria-expanded={filterOpen}
               className={cx(
-                "inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition shadow-xs",
+                "inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-xl border transition shadow-xs",
                 filterOpen || active.length > 0
                   ? "bg-slate-100 border-slate-400 text-slate-900 font-semibold"
                   : "bg-white border-slate-200/90 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
@@ -291,7 +292,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
 
             {/* Filter Dropdown Popover */}
             {filterOpen && (
-              <div className="absolute left-0 mt-2 z-40 w-80 sm:w-[500px] bg-white border border-slate-200 rounded-xl shadow-xl p-4 space-y-4 animate-in fade-in zoom-in-95 duration-100 max-h-[80vh] overflow-y-auto">
+              <div className="absolute left-0 mt-2 z-40 w-80 sm:w-[500px] bg-white border border-slate-200 rounded-2xl shadow-pop p-4 space-y-4 animate-in fade-in zoom-in-95 duration-100 max-h-[80vh] overflow-y-auto">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">Filters</span>
@@ -319,7 +320,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
                     <button
                       type="button"
                       onClick={() => setFilterOpen(false)}
-                      className="text-xs font-semibold px-2.5 py-1 bg-slate-900 text-white rounded-lg hover:bg-slate-800"
+                      className="text-xs font-semibold px-2.5 py-1 bg-slate-900 text-white rounded-xl hover:bg-slate-800"
                     >
                       Done
                     </button>
@@ -345,7 +346,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
                       name="q"
                       defaultValue={params.get("q") ?? ""}
                       placeholder="Search keywords in call transcripts…"
-                      className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50/50 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                      className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/50 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
                     />
                   </form>
                 </div>
@@ -465,12 +466,24 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
           </div>
         </div>
 
-        {/* 3. Ask AI Button on the Right */}
+        {/* 3. Share + Ask AI on the right */}
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={async () => {
+              try { await navigator.clipboard.writeText(window.location.href); toast("Link copied: it opens this exact view"); }
+              catch { toast("Couldn't copy. Copy the address bar instead.", "error"); }
+            }}
+            title="Copy a link to this view (filters and date range included)"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-700 text-sm font-medium shadow-xs"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+            <span className="hidden sm:inline">Copy link</span>
+          </button>
+          <button
+            type="button"
             onClick={() => openAskAi()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-900 text-sm font-semibold transition shadow-xs group"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-900 text-sm font-semibold transition shadow-xs group"
           >
             <span className="text-purple-600 group-hover:scale-110 transition-transform">✨</span>
             <span>Ask AI</span>
@@ -530,7 +543,7 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
       onClick={onClick}
       aria-pressed={on}
       className={cx(
-        "px-2.5 py-1 text-xs font-medium rounded-lg border transition shadow-2xs",
+        "px-2.5 py-1 text-xs font-medium rounded-xl border transition shadow-2xs",
         on
           ? "bg-slate-900 border-slate-900 text-white font-semibold shadow-xs"
           : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"

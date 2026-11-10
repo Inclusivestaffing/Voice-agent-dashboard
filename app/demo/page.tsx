@@ -8,7 +8,6 @@ import RetellAnalytics, { parseBreakdown } from "@/components/overview/RetellAna
 import OverviewDashboard from "@/components/overview/OverviewDashboard";
 import FilterBar from "@/components/filters/FilterBar";
 import { Empty } from "@/components/ui";
-import { TopTabBar } from "@/components/navigation/TopTabBar";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +36,6 @@ export default async function DemoOverview({ searchParams }: { searchParams: Pro
         </div>
       </div>
 
-      <TopTabBar basePath="/demo" />
 
       <Suspense><FilterBar workspaceId="demo" compact options={opts} timezone={DEMO_TZ} /></Suspense>
 

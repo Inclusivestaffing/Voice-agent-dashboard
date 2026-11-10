@@ -19,7 +19,7 @@ export default function DemoReportForm() {
   const [version, setVersion] = useState("");
   const [err, setErr] = useState("");
   const [pending, start] = useTransition();
-  const input = "mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm";
+  const input = "mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-xl";
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +35,7 @@ export default function DemoReportForm() {
       <div className="flex flex-wrap gap-1.5">
         {PRESETS.map(([label, a, b]) => (
           <button type="button" key={label} onClick={() => { setFrom(a); setTo(b); }} aria-pressed={from === a && to === b}
-            className={`px-3 py-1.5 text-xs font-medium border ${from === a && to === b ? "bg-ink border-ink text-white" : "border-line-strong text-dim hover:text-ink"}`}>{label}</button>
+            className={`px-3 py-1.5 text-xs font-medium border ${from === a && to === b ? "bg-ink border-ink text-white" : "border-line-strong text-dim hover:text-ink"} rounded-xl`}>{label}</button>
         ))}
       </div>
       <div className="grid sm:grid-cols-3 gap-4">

@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui";
 import DemoReportForm from "./DemoReportForm";
-import { TopTabBar } from "@/components/navigation/TopTabBar";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +15,6 @@ export default function DemoReports() {
         </div>
       </div>
 
-      <TopTabBar basePath="/demo" />
 
       <Card title="Generate a report" className="mb-6">
         <DemoReportForm />

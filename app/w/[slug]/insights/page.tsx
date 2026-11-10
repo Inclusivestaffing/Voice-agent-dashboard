@@ -5,7 +5,6 @@ import { previousPeriod } from "@/lib/metrics/aggregate";
 import FilterBar from "@/components/filters/FilterBar";
 import InsightsView from "@/components/insights/InsightsView";
 import { Empty } from "@/components/ui";
-import { TopTabBar } from "@/components/navigation/TopTabBar";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +32,6 @@ export default async function InsightsPage({ params, searchParams }: { params: P
         </div>
       </div>
 
-      <TopTabBar basePath={`/w/${slug}`} />
 
       <Suspense><FilterBar workspaceId={ws.id} options={options} compact /></Suspense>
 

@@ -7,11 +7,11 @@ import Chart from "@/components/charts/Chart";
 import { Card, OutcomePill, RootCauseTag, fmtPct, fmtMs, fmtDate, humanize, cx } from "@/components/ui";
 
 const SEV_CLS: Record<string, string> = {
-  critical: "bg-rose-100 text-rose-800 border border-rose-200",
-  high: "bg-rose-50 text-rose-700 border border-rose-200/70",
-  medium: "bg-amber-50 text-amber-800 border border-amber-200/70",
-  low: "bg-slate-100 text-slate-700 border border-slate-200",
-  none: "bg-emerald-50 text-emerald-700 border border-emerald-200/70",
+  critical: "bg-rose-100 text-rose-800 border border-rose-200 rounded-xl",
+  high: "bg-rose-50 text-rose-700 border border-rose-200/70 rounded-xl",
+  medium: "bg-amber-50 text-amber-800 border border-amber-200/70 rounded-xl",
+  low: "bg-slate-100 text-slate-700 border border-slate-200 rounded-xl",
+  none: "bg-emerald-50 text-emerald-700 border border-emerald-200/70 rounded-xl",
 };
 
 const SCORE_LABEL: Record<string, string> = {
@@ -55,7 +55,7 @@ export default function InsightsView({
         ) : (
           <div className="space-y-3">
             {issues.map((it, i) => (
-              <details key={it.cause} className="bg-white border border-slate-200/90 rounded-xl shadow-xs overflow-hidden group" open={i < 2}>
+              <details key={it.cause} className="bg-white border border-slate-200/70 rounded-2xl shadow-card overflow-hidden group" open={i < 2}>
                 <summary className="p-4 flex items-start gap-4 cursor-pointer hover:bg-slate-50/60 transition">
                   <span className="text-xl font-bold text-slate-400 w-7 tabular">{i + 1}</span>
                   <div className="flex-1 min-w-0">
@@ -91,7 +91,7 @@ export default function InsightsView({
                       <>
                         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4 mb-2">Prompt changes to try</div>
                         {it.promptChanges.map((p, j) => (
-                          <pre key={j} className="whitespace-pre-wrap text-[12px] bg-white border border-slate-200 rounded-lg p-3 mb-2 font-mono text-slate-800 shadow-2xs">{p}</pre>
+                          <pre key={j} className="whitespace-pre-wrap text-[12px] bg-white border border-slate-200 rounded-xl p-3 mb-2 font-mono text-slate-800 shadow-2xs">{p}</pre>
                         ))}
                       </>
                     )}
@@ -101,8 +101,8 @@ export default function InsightsView({
                     <ul className="space-y-2">
                       {it.examples.map((e) => (
                         <li key={e.call_id}>
-                          <Link href={link(e.call_id)} className="block border-l-[3px] border-slate-300 hover:border-slate-900 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-r-lg px-3 py-2 text-[12px] leading-relaxed transition shadow-2xs">
-                            <span className={cx("text-xs font-semibold px-1.5 py-0.2 rounded mr-1.5", SEV_CLS[e.severity])}>{e.severity}</span>
+                          <Link href={link(e.call_id)} className="block border-l-[3px] border-slate-300 hover:border-slate-900 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-r-xl px-3 py-2 text-[12px] leading-relaxed transition shadow-2xs">
+                            <span className={cx("text-xs font-semibold px-1.5 py-0.2 rounded-md mr-1.5", SEV_CLS[e.severity])}>{e.severity}</span>
                             <span className="text-slate-800">{e.summary.slice(0, 220)}</span>
                           </Link>
                         </li>
@@ -196,7 +196,7 @@ export default function InsightsView({
             <ul className="divide-y divide-slate-100">
               {queue.map((c) => (
                 <li key={c.call_id}>
-                  <Link href={link(c.call_id)} className="flex items-start gap-3 py-3 hover:bg-slate-50/80 rounded-lg px-2 -mx-2 transition">
+                  <Link href={link(c.call_id)} className="flex items-start gap-3 py-3 hover:bg-slate-50/80 rounded-xl px-2 -mx-2 transition">
                     <div className="flex-1 min-w-0">
                       <div className="flex gap-1.5 flex-wrap items-center">
                         <OutcomePill outcome={c.outcome} />
@@ -228,7 +228,7 @@ export default function InsightsView({
                 const d = c.analysis as unknown as CallDiagnosis;
                 return (
                   <li key={c.call_id}>
-                    <Link href={link(c.call_id)} className="block py-3 hover:bg-slate-50/80 rounded-lg px-2 -mx-2 transition">
+                    <Link href={link(c.call_id)} className="block py-3 hover:bg-slate-50/80 rounded-xl px-2 -mx-2 transition">
                       <div className="flex justify-between gap-2">
                         <span className="font-semibold text-[13px] text-slate-900">{d.captured?.caller_name || "Unknown caller"}</span>
                         <span className="text-xs font-mono text-slate-500">{d.captured?.callback_number || c.from_number}</span>

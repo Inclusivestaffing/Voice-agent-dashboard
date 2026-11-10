@@ -97,12 +97,12 @@ export default function CallHistoryTable({ rows, timezone, detailBase, navQuery,
   return (
     <>
       <div className="flex justify-end mb-2.5 relative" ref={popRef}>
-        <button onClick={() => setOpen(!open)} aria-expanded={open} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 transition">
+        <button onClick={() => setOpen(!open)} aria-expanded={open} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 transition">
           <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Customize fields
         </button>
         {open && (
-          <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-slate-200 rounded-xl shadow-lg p-4 w-72 max-h-[420px] overflow-y-auto">
+          <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-slate-200 rounded-2xl shadow-pop p-4 w-72 max-h-[420px] overflow-y-auto">
             {(["Retell", "AI analysis"] as const).map((g) => (
               <fieldset key={g} className="mb-3">
                 <legend className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">{g === "Retell" ? "Retell fields" : "AI analysis"}</legend>
@@ -117,7 +117,7 @@ export default function CallHistoryTable({ rows, timezone, detailBase, navQuery,
         )}
       </div>
 
-      <div className="hidden md:block overflow-x-auto border border-slate-200/90 rounded-xl bg-white shadow-xs">
+      <div className="hidden md:block overflow-x-auto border border-slate-200/70 rounded-2xl bg-white shadow-card">
         <table className="w-full text-[13px]">
           <thead className="bg-slate-50/90">
             <tr>
@@ -142,7 +142,7 @@ export default function CallHistoryTable({ rows, timezone, detailBase, navQuery,
         </table>
       </div>
 
-      <div className="md:hidden border border-slate-200/90 rounded-xl bg-white divide-y divide-slate-100 shadow-xs overflow-hidden">
+      <div className="md:hidden border border-slate-200/70 rounded-2xl bg-white divide-y divide-slate-100 shadow-card overflow-hidden">
         {rows.map((r) => (
           <Link key={r.call_id} href={href(r.call_id)} className="flex justify-between gap-3 p-4 active:bg-surface-2">
             <div className="min-w-0">

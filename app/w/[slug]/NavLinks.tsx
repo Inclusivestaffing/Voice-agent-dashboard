@@ -20,7 +20,7 @@ export default function NavLinks({ basePath, label = "Workspace", settings = tru
           href={it.keepQuery ? `${it.href}${qs}` : it.href}
           current={nav.isCurrent(it)}
           onSelect={nav.select(it)}
-          className="press flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors duration-150"
+          className="press flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-xl whitespace-nowrap transition-colors duration-150"
           activeClass="bg-slate-900 text-white shadow-xs"
           idleClass="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
         />

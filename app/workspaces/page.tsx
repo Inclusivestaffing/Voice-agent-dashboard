@@ -37,7 +37,7 @@ export default async function WorkspacesPage() {
       {list.length > 0 && (
         <section className="grid sm:grid-cols-2 gap-4 mb-12">
           {list.map(({ ws, role }) => (
-            <Link key={ws.id} href={`/w/${ws.slug}/overview`} className="group bg-surface border border-line p-5 hover:border-ink transition flex items-center gap-4">
+            <Link key={ws.id} href={`/w/${ws.slug}/overview`} className="group bg-surface border border-line p-5 hover:border-ink transition flex items-center gap-4 rounded-2xl">
               {ws.logo_url
                 // eslint-disable-next-line @next/next/no-img-element
                 ? <img src={ws.logo_url} alt="" className="h-10 w-auto max-w-[80px] object-contain" />
@@ -52,7 +52,7 @@ export default async function WorkspacesPage() {
         </section>
       )}
 
-      <section className="bg-surface border border-line p-6">
+      <section className="bg-surface border border-line p-6 rounded-2xl">
         <h2 className="section-title mb-1">Create a workspace</h2>
         <p className="text-sm text-dim mb-5">Paste the client&apos;s Retell API key (Retell dashboard → Settings → API Keys). We&apos;ll import their calls and start analyzing them right away.</p>
         <CreateWorkspaceForm />

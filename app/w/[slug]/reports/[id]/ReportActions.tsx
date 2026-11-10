@@ -12,9 +12,9 @@ export default function ReportActions({ slug, reportId }: { slug: string; report
   return (
     <div className="flex items-center gap-2">
       <button disabled={pending} onClick={() => { if (confirm("Revoke the current share link? Anyone with the old link will lose access.")) start(async () => { await rotateShareLink(slug, reportId); setMsg("Old link revoked"); router.refresh(); }); }}
-        className="border border-line-strong bg-surface px-3.5 py-2 text-xs font-medium text-dim hover:text-ink">Revoke link</button>
+        className="border border-line-strong bg-surface px-3.5 py-2 text-xs font-medium text-dim hover:text-ink rounded-xl">Revoke link</button>
       <button disabled={pending} onClick={() => { if (confirm("Delete this report permanently?")) start(() => deleteReport(slug, reportId)); }}
-        className="border border-line-strong bg-surface px-3.5 py-2 text-xs font-medium text-dim hover:text-bad">Delete</button>
+        className="border border-line-strong bg-surface px-3.5 py-2 text-xs font-medium text-dim hover:text-bad rounded-xl">Delete</button>
       {msg && <span className="text-xs text-good" role="status">{msg}</span>}
     </div>
   );

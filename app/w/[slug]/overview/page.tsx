@@ -11,7 +11,6 @@ import FilterBar from "@/components/filters/FilterBar";
 import { ChartBuilder, DeleteChartButton } from "@/components/charts/ChartBuilder";
 import { Card, Empty, fmtDur, fmtMs } from "@/components/ui";
 import SyncButtons from "./SyncButtons";
-import { TopTabBar } from "@/components/navigation/TopTabBar";
 import { canEdit } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
@@ -60,7 +59,6 @@ export default async function Overview({ params, searchParams }: { params: Promi
   return (
     <>
       <PageHead ws={ws.name} right={canEdit(role) ? <SyncButtons workspaceId={ws.id} pending={pending} /> : null} />
-      <TopTabBar basePath={`/w/${slug}`} />
       <Suspense><FilterBar workspaceId={ws.id} options={options} savedViews={views ?? []} timezone={ws.timezone} /></Suspense>
 
       {calls.length === 0 ? <Empty title="No calls match these filters">Try a wider date range or clear some filters.</Empty> : (

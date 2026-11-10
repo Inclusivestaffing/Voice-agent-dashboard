@@ -22,8 +22,8 @@ export default function RoleControlsCard({
     >
       <div className="space-y-5">
         {/* Account summary */}
-        <div className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-200/90 rounded-xl">
-          <div className="h-10 w-10 rounded-xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-xs">
+        <div className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-200/70 rounded-2xl">
+          <div className="h-10 w-10 rounded-2xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-card">
             IS
           </div>
           <div className="min-w-0 flex-1">
@@ -56,7 +56,7 @@ export default function RoleControlsCard({
                   type="button"
                   onClick={() => setRole(r)}
                   className={cx(
-                    "p-3 rounded-xl border text-left transition flex flex-col justify-between gap-2 shadow-2xs group",
+                    "p-3 rounded-2xl border text-left transition flex flex-col justify-between gap-2 shadow-card group",
                     isSelected
                       ? "border-slate-900 bg-slate-900 text-white shadow-xs"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-800"
@@ -90,7 +90,7 @@ export default function RoleControlsCard({
         </div>
 
         {/* Explanatory role badge notes */}
-        <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-3.5 space-y-2 text-xs text-slate-600">
+        <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-3.5 space-y-2 text-xs text-slate-600">
           <div className="font-semibold text-slate-800 flex items-center gap-1.5">
             <svg className="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />

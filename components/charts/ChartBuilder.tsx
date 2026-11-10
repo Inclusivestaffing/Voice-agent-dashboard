@@ -18,11 +18,11 @@ export function ChartBuilder({ workspaceId, customKeys }: { workspaceId: string;
   const [err, setErr] = useState("");
 
   const dims = [...DIMENSION_OPTIONS, ...customKeys.map((k) => ({ id: `custom:${k}`, label: `Post-call: ${k}` }))];
-  const sel = "mt-1 w-full border border-line-strong bg-surface px-2 py-1.5 text-xs";
+  const sel = "mt-1 w-full border border-line-strong bg-surface px-2 py-1.5 text-xs rounded-xl";
 
   if (!open) return <Button variant="ghost" onClick={() => setOpen(true)}>+ Add chart</Button>;
   return (
-    <div className="bg-surface border border-ink p-4 w-full">
+    <div className="bg-surface border border-ink p-4 w-full rounded-2xl">
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         <label className="text-xs eyebrow">Metric
           <select className={sel} value={metric} onChange={(e) => { setMetric(e.target.value); setMeasure(METRIC_OPTIONS.find((x) => x.id === e.target.value)!.measures[0]); }}>
