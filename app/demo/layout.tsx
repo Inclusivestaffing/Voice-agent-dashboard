@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import DemoNav from "./DemoNav";
 import { InclusiveLogo } from "@/components/InclusiveLogo";
@@ -7,8 +6,6 @@ import { AppProvider } from "@/components/context/AppContext";
 
 /** Preview of the full product on the Open Water Marine sample calls. */
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
-  if (process.env.DEMO_MODE === "0") notFound();
-
   return (
     <AppProvider initialRole="admin" workspaceId="demo">
       <div className="min-h-screen lg:grid lg:grid-cols-[250px_1fr] bg-slate-50/70">

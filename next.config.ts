@@ -43,6 +43,15 @@ const nextConfig: NextConfig = {
   },
   images: { remotePatterns: [{ protocol: "https", hostname: "**.supabase.co" }] },
   experimental: { serverActions: { bodySizeLimit: "3mb" } },
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/demo",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
