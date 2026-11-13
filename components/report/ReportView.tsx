@@ -64,10 +64,12 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
     <div className="report-root max-w-[1200px] mx-auto px-4 sm:px-6 py-8 bg-surface text-ink" style={{ ["--brand" as string]: snap.workspace.brand_primary }}>
       {/* HERO */}
       <header className="border-b-2 border-ink pb-7 mb-7 break-inside-avoid">
-        {snap.workspace.logo_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={snap.workspace.logo_url} alt={snap.workspace.name} className="h-12 sm:h-14 w-auto mb-5" />
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={snap.workspace.logo_url || "/inclusive-logo.png"}
+          alt={snap.workspace.name || "Inclusive Staffing"}
+          className="h-12 sm:h-14 w-auto object-contain mb-5"
+        />
         <div className="inline-block bg-brand text-black font-mono text-[11px] font-bold tracking-widest uppercase px-2.5 py-1 mb-4">{snap.workspace.name} · {monthTag} Report</div>
         <h1 className="text-3xl sm:text-[42px] font-extrabold tracking-tight leading-[1.1]">Your AI Voice Agent<br />Handled <span className="accent-mark">{s.total} Calls</span></h1>
         <p className="text-dim mt-4 max-w-2xl text-[15px] leading-relaxed">A plain-English report on how your AI receptionist performed: how many customers were booked, transferred to your team, or had their contact info saved for follow-up, and where the agent can do better.</p>

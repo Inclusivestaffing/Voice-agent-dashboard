@@ -16,7 +16,7 @@ export default async function DemoReportView({ searchParams }: { searchParams: P
   const { f } = demoFilters(sp, "/demo/reports/view", { live: src.live, timezone: src.timezone });
   const snap = !src.live ? demoSnapshot(f) : snapshotFromCalls({
     calls: filterDemo(await src.calls(f.from, f.to), f), prev: [], transcripts: new Map(),
-    workspace: { name: src.name, logo_url: null, brand_primary: "#facc15", agent_name: src.agentName ?? "Agent", timezone: src.timezone },
+    workspace: { name: src.name, logo_url: "/inclusive-logo.png", brand_primary: "#facc15", agent_name: src.agentName ?? "Agent", timezone: src.timezone },
     businessHours: src.businessHours, period: { from: f.from, to: f.to },
   });
   return (

@@ -229,7 +229,7 @@ export function demoTranscriptText(callId: string): string {
   return demoTranscript(callId).map((u) => `${u.role === "agent" ? "Agent" : "User"}: ${u.content}`).join("\n");
 }
 
-export const DEMO_WORKSPACE = { name: "Open Water Marine", logo_url: null, brand_primary: "#facc15", agent_name: "Allen", timezone: DEMO_TZ };
+export const DEMO_WORKSPACE = { name: "Open Water Marine", logo_url: "/inclusive-logo.png", brand_primary: "#facc15", agent_name: "Allen", timezone: DEMO_TZ };
 
 /** In-memory version of the database filters, for the demo. */
 export function filterDemo(calls: DemoCall[], f: Filters): DemoCall[] {
