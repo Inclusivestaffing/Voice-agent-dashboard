@@ -191,9 +191,14 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
         </Box>
       ) : null}
 
-      <Box title={print ? "Every call" : "Every call (tap to see the transcript)"} sub={print ? undefined : "Tap any row for the AI's findings and the full conversation."}>
-        <ReportCallTable calls={snap.calls} timezone={tz} agentName={agent} print={print} />
-      </Box>
+      {/* Every call transcript section - included in interactive view, excluded from downloadable PDF / print */}
+      {!print && (
+        <div className="print:hidden no-print">
+          <Box title="Every call (tap to see the transcript)" sub="Tap any row for the AI's findings and the full conversation.">
+            <ReportCallTable calls={snap.calls} timezone={tz} agentName={agent} />
+          </Box>
+        </div>
+      )}
 
       <footer className="mt-8 pt-5 border-t border-line text-[11px] font-mono text-muted flex justify-between flex-wrap gap-2">
         <span>Generated {new Date(snap.generated_at).toLocaleString("en-US", { timeZone: tz })}</span>

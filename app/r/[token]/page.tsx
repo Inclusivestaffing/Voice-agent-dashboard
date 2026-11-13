@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/db/supabase";
+import DownloadPdfButton from "@/components/report/DownloadPdfButton";
 import ReportView from "@/components/report/ReportView";
 import type { ReportSnapshot } from "@/lib/reports/snapshot";
 import type { ReportNarrative } from "@/lib/ai/schemas";
@@ -26,6 +27,11 @@ export default async function PublicReport({ params, searchParams }: { params: P
   if (!r) notFound();
   return (
     <div className="bg-surface min-h-screen">
+      {!print && (
+        <div className="no-print print:hidden max-w-[1200px] mx-auto px-4 sm:px-6 pt-6 pb-2 flex justify-end">
+          <DownloadPdfButton />
+        </div>
+      )}
       <ReportView snap={r.snapshot as ReportSnapshot} narrative={r.narrative as ReportNarrative | null} print={print === "1"} />
     </div>
   );

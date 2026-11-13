@@ -5,6 +5,7 @@ import { snapshotFromCalls } from "@/lib/reports/snapshot";
 import { demoFilters } from "@/lib/demo/params";
 import { ruleNarrative } from "@/lib/reports/snapshot";
 import ReportView from "@/components/report/ReportView";
+import DownloadPdfButton from "@/components/report/DownloadPdfButton";
 import { Empty } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -20,9 +21,17 @@ export default async function DemoReportView({ searchParams }: { searchParams: P
   });
   return (
     <>
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-        <Link href="/demo/reports" className="text-xs text-dim hover:text-ink">← Generate another report</Link>
-              </div>
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4 no-print print:hidden">
+        <Link
+          href="/demo/reports"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition"
+        >
+          ← Generate another report
+        </Link>
+        <div className="flex items-center gap-2">
+          <DownloadPdfButton />
+        </div>
+      </div>
       {snap.summary.total === 0 ? <Empty title="No calls in that period, so there's nothing to report." /> : (
         <div className="border border-line -mx-4 sm:mx-0 rounded-xl overflow-hidden">
           <ReportView snap={snap} narrative={ruleNarrative(snap)} />

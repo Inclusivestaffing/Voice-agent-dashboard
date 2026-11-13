@@ -167,3 +167,64 @@ a, button, select, summary, [role="button"], input, label { touch-action: manipu
 * { scrollbar-width: thin; scrollbar-color: #d4d4d8 transparent; }
 ::selection { background: #fde68a; color: #18181b; }
 @media (pointer: fine) { html { overscroll-behavior: none; } }
+
+/* ───────── Print & PDF Export ───────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 8mm;
+  }
+
+  /* Force browsers to print all backgrounds, colors, and gradients */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide app chrome: sidebar, top navigation, buttons, modals, and elements marked no-print */
+  aside,
+  nav,
+  .no-print,
+  .print\:hidden,
+  button,
+  [role="dialog"] {
+    display: none !important;
+  }
+
+  /* Reset layout structure so report fills the whole page */
+  html, body {
+    background: #ffffff !important;
+    color: #18181b !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Remove any 2-column sidebar grid during print */
+  div:has(> aside),
+  .lg\:grid {
+    display: block !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .report-root {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Prevent sections and cards from splitting awkwardly across pages */
+  .break-inside-avoid,
+  section,
+  .report-root section {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
