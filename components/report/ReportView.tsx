@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import type { ReportSnapshot } from "@/lib/reports/snapshot";
 import type { ReportNarrative } from "@/lib/ai/schemas";
 import { OUTCOME_LABEL, ROOT_CAUSE_LABEL, type Outcome, type RootCause } from "@/lib/types";
 import { OUTCOME_COLOR, OUTCOME_ORDER, SENTIMENT_COLOR } from "@/lib/colors";
+import { timeSeries, METRICS, type AnalyticsCall, type Bucket } from "@/lib/metrics/aggregate";
 import Chart from "../charts/Chart";
 import ReportCallTable from "./ReportCallTable";
 import { fmtDur, fmtMs, fmtPct, humanize, cx } from "../ui";
@@ -26,6 +28,37 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
   const transfersOk = snap.calls.filter((c) => c.outcome === "transfer_ok");
   const transfersFail = snap.calls.filter((c) => c.outcome === "transfer_fail");
   const longest = Math.max(0, ...snap.calls.map((c) => c.dur_s ?? 0));
+
+  // Build the Analytics Diagram (Call Volume & Outcome breakdown over time)
+  const analyticsCalls: AnalyticsCall[] = useMemo(() => {
+    return snap.calls.map((c) => ({
+      call_id: c.call_id,
+      start_ts: c.time,
+      end_ts: c.time,
+      duration_ms: (c.dur_s ?? 0) * 1000,
+      agent_id: null,
+      agent_name: null,
+      agent_version: null,
+      call_type: null,
+      direction: "inbound",
+      call_status: "ended",
+      disconnection_reason: null,
+      user_sentiment: c.sentiment,
+      call_successful: c.outcome === "booked" || c.outcome === "transfer_ok" || c.outcome === "lead_captured" || c.outcome === "info",
+      in_voicemail: false,
+      combined_cost_cents: null,
+      e2e_p50_ms: null,
+      e2e_p90_ms: null,
+      from_number: c.phone,
+      outcome: (c.outcome as Outcome) ?? null,
+    }));
+  }, [snap.calls]);
+
+  const daysDiff = Math.max(1, Math.round((Date.parse(snap.period.to) - Date.parse(snap.period.from)) / 86400_000));
+  const autoBucket: Bucket = daysDiff <= 3 ? "hour" : daysDiff <= 45 ? "day" : "week";
+  const callCountMetric = METRICS.find((m) => m.id === "call_count")!;
+  const volumeSeries = timeSeries(analyticsCalls, callCountMetric, "count", autoBucket, snap.period, tz, "outcome");
+  const volumeLabels = volumeSeries.x.map((x) => (autoBucket === "hour" ? x.slice(11, 16) : x.slice(5)));
 
   return (
     <div className="report-root max-w-[1200px] mx-auto px-4 sm:px-6 py-8 bg-surface text-ink" style={{ ["--brand" as string]: snap.workspace.brand_primary }}>
@@ -92,6 +125,40 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
         </div>
       </section>
 
+      {/* ── PAGE 2: THE ANALYTICS DIAGRAM & CORE VISUALIZATIONS ── */}
+      <div className="print-page-break" />
+
+      {/* The Analytics Diagram: Call volume and outcomes over time */}
+      <section className="mb-7 break-inside-avoid">
+        <Box
+          title="Call activity & volume over time"
+          sub={`Daily call volume broken down by outcome (${periodLabel(snap.period.from, snap.period.to, tz)})`}
+        >
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-xs font-mono text-muted">
+              Total calls analyzed: <b className="text-ink font-semibold">{s.total}</b>
+            </div>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-brand-wash border border-brand px-2 py-0.5 text-brand-ink">
+              Analytics Diagram
+            </span>
+          </div>
+          <Chart
+            kind="stacked"
+            forceVisible
+            toolbar={false}
+            ariaLabel="Call volume over time by outcome"
+            categories={volumeLabels}
+            series={volumeSeries.series.map((sr) => ({
+              name: OUTCOME_LABEL[sr.name as Outcome] ?? humanize(sr.name),
+              data: sr.data,
+              color: OUTCOME_COLOR[sr.name] || "--s1",
+            }))}
+            height={185}
+          />
+        </Box>
+      </section>
+
+      {/* Core Outcome & Hand-off Analysis */}
       <div className="grid lg:grid-cols-2 gap-5 mb-7 print-grid-2 break-inside-avoid">
         <Box title="What happened on each call">
           <Chart kind="donut" forceVisible toolbar={false} ariaLabel="Outcomes" categories={outcomeKeys.map((k) => OUTCOME_LABEL[k as Outcome] ?? "Not analyzed")} series={[{ name: "Calls", data: outcomeKeys.map((k) => s.by_outcome[k]) }]} sliceColors={outcomeKeys.map((k) => OUTCOME_COLOR[k])} />
@@ -117,88 +184,88 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
         </Box>
       </div>
 
-      {transfersOk.length > 0 && (
-        <Box title={`All ${transfersOk.length} successful hand-offs`} sub="Callers the AI correctly passed to a human" className="mb-7 break-inside-avoid">
-          <div className="grid md:grid-cols-2 gap-1.5">{transfersOk.map((c) => (
-            <div key={c.n} className="bg-surface-2 border-l-[3px] border-brand px-4 py-3 text-[12px] flex justify-between gap-3">
-              <div><b>#{c.n} · {c.caller}</b>{/emergenc|sinking|stuck|stranded/i.test(c.reason) && <span className="ml-1.5 bg-bad text-white text-[9px] font-mono font-bold uppercase px-1.5">Emergency</span>}<div className="text-dim mt-1">{c.reason}</div></div>
-              <span className="font-mono text-dim font-bold shrink-0">{fmtDur(c.dur_s)}</span>
-            </div>
-          ))}</div>
-        </Box>
-      )}
-
+      {/* Caller Sentiment & Day of Week Timing */}
       <div className="grid lg:grid-cols-2 gap-5 mb-7 print-grid-2 break-inside-avoid">
         <Box title="How callers felt">
           <Chart kind="donut" forceVisible toolbar={false} ariaLabel="Sentiment" categories={sentimentKeys} series={[{ name: "Calls", data: sentimentKeys.map((k) => s.by_sentiment[k]) }]} sliceColors={sentimentKeys.map((k) => SENTIMENT_COLOR[k])} />
           {narrative && <Note>{narrative.chart_insights.sentiment}</Note>}
         </Box>
-        <Box title="How calls ended">
-          <Chart kind="bar" forceVisible toolbar={false} ariaLabel="How calls ended" categories={disc.map(([k]) => humanize(k))} series={[{ name: "Calls", data: disc.map(([, v]) => v) }]} height={Math.max(160, disc.length * 32)} />
-          {narrative && <Note>{narrative.chart_insights.disconnections}</Note>}
-        </Box>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-5 mb-7 print-grid-2 break-inside-avoid">
         <Box title="When calls come in (by day)">
           <Chart kind="column" forceVisible toolbar={false} ariaLabel="Calls by day" categories={DOW} series={[{ name: "Calls", data: s.by_dow }]} />
           {narrative && <Note>{narrative.chart_insights.by_day}</Note>}
         </Box>
-        <Box title="When calls come in (by hour)" sub={tz}>
-          <Chart kind="column" forceVisible toolbar={false} labels="none" ariaLabel="Calls by hour" categories={s.by_hour.map((_, h) => String(h).padStart(2, "0"))} series={[{ name: "Calls", data: s.by_hour }]} />
-          {narrative && <Note>{narrative.chart_insights.by_hour}</Note>}
-        </Box>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5 mb-7 print-grid-2 break-inside-avoid">
-        <Box title="How long each type of call takes">
-          <Chart kind="bar" forceVisible toolbar={false} unit="s" ariaLabel="Duration by outcome" categories={durKeys.map((k) => OUTCOME_LABEL[k as Outcome] ?? k)} series={[{ name: "Avg duration", data: durKeys.map((k) => s.duration_by_outcome[k]) }]} height={Math.max(160, durKeys.length * 32)} />
-          {narrative && <Note>{narrative.chart_insights.duration}</Note>}
-        </Box>
-        <Box title="Conversation quality" sub="Measured from the call audio and word timings">
-          <dl className="grid grid-cols-2 gap-px bg-line border border-line text-sm">
-            {[
-              ["Median response time", fmtMs(s.e2e_latency_ms.median)],
-              ["Slowest 10% of responses", fmtMs(s.e2e_p90_latency_ms.p90)],
-              ["Caller interruptions per call", s.conversation.avg_interruptions?.toFixed(1) ?? "—"],
-              ["Time before greeting", s.conversation.avg_time_to_first_word_s == null ? "—" : `${s.conversation.avg_time_to_first_word_s.toFixed(1)}s`],
-              ["Calls where the AI repeated itself", String(s.conversation.calls_with_repetition)],
-              ["After-hours calls covered", String(s.after_hours_calls)],
-            ].map(([k, v]) => <div key={k} className="bg-surface p-3"><dt className="eyebrow !text-[9px]">{k}</dt><dd className="text-xl font-extrabold mt-1">{v}</dd></div>)}
-          </dl>
-          {narrative && <Note>{narrative.chart_insights.conversation_quality}</Note>}
-        </Box>
-      </div>
+      {/* ── SECONDARY SECTIONS: Displayed on Web, omitted from 2-page PDF ── */}
+      <div className="print:hidden no-print space-y-7">
+        {transfersOk.length > 0 && (
+          <Box title={`All ${transfersOk.length} successful hand-offs`} sub="Callers the AI correctly passed to a human">
+            <div className="grid md:grid-cols-2 gap-1.5">{transfersOk.map((c) => (
+              <div key={c.n} className="bg-surface-2 border-l-[3px] border-brand px-4 py-3 text-[12px] flex justify-between gap-3">
+                <div><b>#{c.n} · {c.caller}</b>{/emergenc|sinking|stuck|stranded/i.test(c.reason) && <span className="ml-1.5 bg-bad text-white text-[9px] font-mono font-bold uppercase px-1.5">Emergency</span>}<div className="text-dim mt-1">{c.reason}</div></div>
+                <span className="font-mono text-dim font-bold shrink-0">{fmtDur(c.dur_s)}</span>
+              </div>
+            ))}</div>
+          </Box>
+        )}
 
-      {(narrative?.recommended_actions.length || snap.issues.length) ? (
-        <Box title="What we'll improve next" className="mb-7 break-inside-avoid">
-          {narrative && (
-            <ol className="space-y-3 mb-5">{narrative.recommended_actions.map((a, i) => (
-              <li key={i} className="flex gap-3">
-                <span className="w-7 h-7 shrink-0 grid place-items-center bg-brand text-black font-extrabold text-sm">{i + 1}</span>
-                <div className="text-[13px] leading-relaxed"><b>{a.action}</b><div className="text-dim">{a.why}</div><div className="text-good text-[12px] mt-0.5">Expected impact: {a.expected_impact}</div></div>
-              </li>
-            ))}</ol>
-          )}
-          {snap.issues.length > 0 && (
-            <div className="overflow-x-auto"><table className="w-full text-[12px]">
-              <thead><tr className="eyebrow text-left border-b-2 border-ink"><th className="py-2">Issue</th><th className="text-right">Calls</th><th className="pl-4">Example calls</th></tr></thead>
-              <tbody>{snap.issues.map((it) => (
-                <tr key={it.cause} className="border-b border-line"><td className="py-2 font-semibold">{ROOT_CAUSE_LABEL[it.cause as RootCause] ?? it.cause}</td><td className="text-right font-mono">{it.count}</td><td className="pl-4 font-mono text-dim">{it.examples.map((n) => `#${n}`).join(", ")}</td></tr>
-              ))}</tbody>
-            </table></div>
-          )}
-        </Box>
-      ) : null}
-
-      {/* Every call transcript section - included in interactive view, excluded from downloadable PDF / print */}
-      {!print && (
-        <div className="print:hidden no-print">
-          <Box title="Every call (tap to see the transcript)" sub="Tap any row for the AI's findings and the full conversation.">
-            <ReportCallTable calls={snap.calls} timezone={tz} agentName={agent} />
+        <div className="grid lg:grid-cols-2 gap-5">
+          <Box title="How calls ended">
+            <Chart kind="bar" forceVisible toolbar={false} ariaLabel="How calls ended" categories={disc.map(([k]) => humanize(k))} series={[{ name: "Calls", data: disc.map(([, v]) => v) }]} height={Math.max(160, disc.length * 32)} />
+            {narrative && <Note>{narrative.chart_insights.disconnections}</Note>}
+          </Box>
+          <Box title="When calls come in (by hour)" sub={tz}>
+            <Chart kind="column" forceVisible toolbar={false} labels="none" ariaLabel="Calls by hour" categories={s.by_hour.map((_, h) => String(h).padStart(2, "0"))} series={[{ name: "Calls", data: s.by_hour }]} />
+            {narrative && <Note>{narrative.chart_insights.by_hour}</Note>}
           </Box>
         </div>
-      )}
+
+        <div className="grid lg:grid-cols-2 gap-5">
+          <Box title="How long each type of call takes">
+            <Chart kind="bar" forceVisible toolbar={false} unit="s" ariaLabel="Duration by outcome" categories={durKeys.map((k) => OUTCOME_LABEL[k as Outcome] ?? k)} series={[{ name: "Avg duration", data: durKeys.map((k) => s.duration_by_outcome[k]) }]} height={Math.max(160, durKeys.length * 32)} />
+            {narrative && <Note>{narrative.chart_insights.duration}</Note>}
+          </Box>
+          <Box title="Conversation quality" sub="Measured from the call audio and word timings">
+            <dl className="grid grid-cols-2 gap-px bg-line border border-line text-sm">
+              {[
+                ["Median response time", fmtMs(s.e2e_latency_ms.median)],
+                ["Slowest 10% of responses", fmtMs(s.e2e_p90_latency_ms.p90)],
+                ["Caller interruptions per call", s.conversation.avg_interruptions?.toFixed(1) ?? "—"],
+                ["Time before greeting", s.conversation.avg_time_to_first_word_s == null ? "—" : `${s.conversation.avg_time_to_first_word_s.toFixed(1)}s`],
+                ["Calls where the AI repeated itself", String(s.conversation.calls_with_repetition)],
+                ["After-hours calls covered", String(s.after_hours_calls)],
+              ].map(([k, v]) => <div key={k} className="bg-surface p-3"><dt className="eyebrow !text-[9px]">{k}</dt><dd className="text-xl font-extrabold mt-1">{v}</dd></div>)}
+            </dl>
+            {narrative && <Note>{narrative.chart_insights.conversation_quality}</Note>}
+          </Box>
+        </div>
+
+        {(narrative?.recommended_actions.length || snap.issues.length) ? (
+          <Box title="What we'll improve next">
+            {narrative && (
+              <ol className="space-y-3 mb-5">{narrative.recommended_actions.map((a, i) => (
+                <li key={i} className="flex gap-3">
+                  <span className="w-7 h-7 shrink-0 grid place-items-center bg-brand text-black font-extrabold text-sm">{i + 1}</span>
+                  <div className="text-[13px] leading-relaxed"><b>{a.action}</b><div className="text-dim">{a.why}</div><div className="text-good text-[12px] mt-0.5">Expected impact: {a.expected_impact}</div></div>
+                </li>
+              ))}</ol>
+            )}
+            {snap.issues.length > 0 && (
+              <div className="overflow-x-auto"><table className="w-full text-[12px]">
+                <thead><tr className="eyebrow text-left border-b-2 border-ink"><th className="py-2">Issue</th><th className="text-right">Calls</th><th className="pl-4">Example calls</th></tr></thead>
+                <tbody>{snap.issues.map((it) => (
+                  <tr key={it.cause} className="border-b border-line"><td className="py-2 font-semibold">{ROOT_CAUSE_LABEL[it.cause as RootCause] ?? it.cause}</td><td className="text-right font-mono">{it.count}</td><td className="pl-4 font-mono text-dim">{it.examples.map((n) => `#${n}`).join(", ")}</td></tr>
+                ))}</tbody>
+              </table></div>
+            )}
+          </Box>
+        ) : null}
+
+        {/* Every call transcript section */}
+        <Box title="Every call (tap to see the transcript)" sub="Tap any row for the AI's findings and the full conversation.">
+          <ReportCallTable calls={snap.calls} timezone={tz} agentName={agent} />
+        </Box>
+      </div>
 
       <footer className="mt-8 pt-5 border-t border-line text-[11px] font-mono text-muted flex justify-between flex-wrap gap-2">
         <span>Generated {new Date(snap.generated_at).toLocaleString("en-US", { timeZone: tz })}</span>

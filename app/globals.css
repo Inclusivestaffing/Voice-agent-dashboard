@@ -169,10 +169,23 @@ a, button, select, summary, [role="button"], input, label { touch-action: manipu
 @media (pointer: fine) { html { overscroll-behavior: none; } }
 
 /* ───────── Print & PDF Export ───────── */
+.print-page-break {
+  display: none;
+}
+
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm 10mm 12mm 10mm;
+    margin: 8mm 10mm;
+  }
+
+  .print-page-break {
+    display: block !important;
+    break-before: page !important;
+    page-break-before: page !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* 1. Never clip or truncate print content */
