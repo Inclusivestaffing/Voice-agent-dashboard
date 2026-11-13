@@ -25,7 +25,7 @@ export default async function DemoSettingsPage() {
             Settings
           </h1>
           <p className="text-sm text-zinc-500 mt-1.5 max-w-2xl">
-            Connect your Retell account, choose agents, and manage branding.
+            Workspaces, Retell connection, agents and branding.
           </p>
         </div>
         {gateActive() && (
@@ -35,7 +35,7 @@ export default async function DemoSettingsPage() {
         )}
       </div>
 
-      <Card title="Retell integration" sub={connected ? "Live calls, transcripts and recordings come straight from your Retell account." : "Connect your Retell account to replace the sample data with your real calls, transcripts and recordings."} className="mt-6">
+      <Card title={connected ? "Retell integration" : "Create a workspace"} sub={connected ? "Live calls, transcripts and recordings come straight from this workspace's Retell account." : "You're on the sample workspace (Open Water Marine). Create a workspace with a Retell API key to see real calls, transcripts and recordings. The sample stays available in the workspace menu."} className="mt-6">
         <RetellIntegration connected={connected} problem={storeProblem()} storage={storageMode()} />
       </Card>
 

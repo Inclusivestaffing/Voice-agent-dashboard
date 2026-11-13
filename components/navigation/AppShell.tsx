@@ -19,7 +19,7 @@ import NavLinks from "@/app/w/[slug]/NavLinks";
  *   │ status · me   └──────────────────────────────────────────────┘ │
  *   └──────────────────────────────────────────────────────────────────┘
  */
-export default function AppShell({ basePath, logoHref, current, workspaces, demo = false, status, account, canLogOut = false, children }: {
+export default function AppShell({ basePath, logoHref, current, workspaces, demo = false, status, account, canLogOut = false, createProblem = null, children }: {
   basePath: string;
   logoHref: string;
   current: WorkspaceLite;
@@ -29,6 +29,7 @@ export default function AppShell({ basePath, logoHref, current, workspaces, demo
   account: { name: string; email: string };
   /** Show Log out (the dashboard is behind the password sign-in). */
   canLogOut?: boolean;
+  createProblem?: string | null;
   children: React.ReactNode;
 }) {
   return (
@@ -40,7 +41,7 @@ export default function AppShell({ basePath, logoHref, current, workspaces, demo
             <InclusiveLogo href={logoHref} className="h-8 w-auto max-w-[160px]" />
           </div>
           <div className="px-2.5 pb-1 shrink-0">
-            <WorkspaceSwitcher current={current} workspaces={workspaces} demo={demo} settingsHref={`${basePath}/settings`} />
+            <WorkspaceSwitcher current={current} workspaces={workspaces} demo={demo} settingsHref={`${basePath}/settings`} createProblem={createProblem} />
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto">

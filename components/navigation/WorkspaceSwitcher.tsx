@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import CreateWorkspaceForm from "@/app/workspaces/CreateWorkspaceForm";
 import { cx } from "@/components/ui";
-import { DEMO_QS } from "@/lib/demo/range";
+import { ConnectForm } from "@/components/settings/RetellIntegration";
+import { switchWorkspace } from "@/app/demo/settings/actions";
 import { useApp } from "@/components/context/AppContext";
 
 export interface WorkspaceLite { name: string; slug: string; logo_url?: string | null }
@@ -29,9 +30,12 @@ const Check = () => (
  * Workspace switcher at the top of the sidebar (Retell-style): shows the current workspace,
  * lists the others, and creates a new one in a dialog without leaving the page.
  */
-export default function WorkspaceSwitcher({ current, workspaces, demo = false, settingsHref }: {
+export default function WorkspaceSwitcher({ current, workspaces, demo = false, settingsHref, createProblem = null }: {
   current: WorkspaceLite; workspaces: WorkspaceLite[]; demo?: boolean; settingsHref: string;
+  /** Why a workspace can't be created right now (missing server setting), if anything. */
+  createProblem?: string | null;
 }) {
+  const [switching, startSwitch] = useTransition();
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -47,7 +51,9 @@ export default function WorkspaceSwitcher({ current, workspaces, demo = false, s
   }, [open]);
 
   const { live } = useApp();
-  const href = (ws: WorkspaceLite) => (demo && ws.slug === "demo" ? (live ? "/demo" : `/demo?${DEMO_QS}`) : `/w/${ws.slug}/overview`);
+  // A new workspace was created (or switched to): close the dialog.
+  useEffect(() => { setCreating(false); }, [current.slug]);
+  const href = (ws: WorkspaceLite) => `/w/${ws.slug}/overview`;
 
   return (
     <div ref={root} className="relative">
@@ -65,7 +71,7 @@ export default function WorkspaceSwitcher({ current, workspaces, demo = false, s
         <Avatar ws={current} />
         <span className="min-w-0 flex-1">
           <span className="block text-[13px] font-semibold text-zinc-900 truncate leading-tight">{current.name}</span>
-          <span className="block text-[11px] text-zinc-500 truncate leading-tight mt-0.5">{demo ? (live ? "Live from Retell" : "Demo workspace") : "Workspace"}</span>
+          <span className="block text-[11px] text-zinc-500 truncate leading-tight mt-0.5">{switching ? "Switching…" : demo ? (live ? "Live from Retell" : "Sample workspace") : "Workspace"}</span>
         </span>
         <svg className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m7 15 5 5 5-5" /><path d="m7 9 5-5 5 5" /></svg>
       </button>
@@ -77,12 +83,23 @@ export default function WorkspaceSwitcher({ current, workspaces, demo = false, s
           <div className="max-h-64 overflow-y-auto">
             {workspaces.map((ws) => {
               const on = ws.slug === current.slug;
-              return (
-                <Link key={ws.slug} href={href(ws)} role="menuitemradio" aria-checked={on} onClick={() => setOpen(false)}
-                  className={cx("flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm", on ? "bg-zinc-100/80" : "hover:bg-zinc-50")}>
+              const body = (
+                <>
                   <Avatar ws={ws} size="sm" />
                   <span className="flex-1 min-w-0 truncate font-medium text-zinc-800">{ws.name}</span>
+                  {demo && ws.slug === "sample" && <span className="text-[11px] text-zinc-400">Sample</span>}
                   {on && <Check />}
+                </>
+              );
+              const cls = cx("w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-left", on ? "bg-zinc-100/80" : "hover:bg-zinc-50");
+              return demo ? (
+                <button key={ws.slug} type="button" role="menuitemradio" aria-checked={on} className={cls}
+                  onClick={() => { setOpen(false); if (!on) startSwitch(() => switchWorkspace(ws.slug)); }}>
+                  {body}
+                </button>
+              ) : (
+                <Link key={ws.slug} href={href(ws)} role="menuitemradio" aria-checked={on} onClick={() => setOpen(false)} className={cls}>
+                  {body}
                 </Link>
               );
             })}
@@ -114,12 +131,12 @@ export default function WorkspaceSwitcher({ current, workspaces, demo = false, s
         </div>
       )}
 
-      {creating && <CreateDialog demo={demo} onClose={() => setCreating(false)} />}
+      {creating && <CreateDialog demo={demo} problem={createProblem} onClose={() => setCreating(false)} />}
     </div>
   );
 }
 
-function CreateDialog({ demo, onClose }: { demo: boolean; onClose: () => void }) {
+function CreateDialog({ demo, problem, onClose }: { demo: boolean; problem: string | null; onClose: () => void }) {
   const titleId = useId();
   const panel = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -139,7 +156,7 @@ function CreateDialog({ demo, onClose }: { demo: boolean; onClose: () => void })
         <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-zinc-100">
           <div>
             <h2 id={titleId} className="font-display text-lg font-semibold tracking-tight text-zinc-900">Create workspace</h2>
-            <p className="text-sm text-zinc-500 mt-0.5">One workspace per client, with its own Retell key, team and reports.</p>
+            <p className="text-sm text-zinc-500 mt-0.5">One workspace per client. Connect their Retell account to see their real calls.</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="h-8 w-8 -mr-2 rounded-md grid place-items-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100">
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -147,27 +164,7 @@ function CreateDialog({ demo, onClose }: { demo: boolean; onClose: () => void })
         </div>
         <div className="px-6 py-5">
           {demo ? (
-            <div className="space-y-4">
-              <ol className="space-y-3">
-                {[
-                  ["Name it after the client", "e.g. Open Water Marine. It appears on dashboards and reports."],
-                  ["Paste their Retell API key", "Stored encrypted. Calls start importing straight away."],
-                  ["Invite your team", "Everyone you invite gets Admin access."],
-                ].map(([t, d], i) => (
-                  <li key={t} className="flex gap-3">
-                    <span className="h-6 w-6 shrink-0 rounded-full bg-zinc-900 text-white text-xs font-semibold grid place-items-center tabular">{i + 1}</span>
-                    <span><span className="block text-sm font-medium text-zinc-900">{t}</span><span className="block text-[13px] text-zinc-500">{d}</span></span>
-                  </li>
-                ))}
-              </ol>
-              <p className="text-[13px] text-zinc-500 rounded-lg bg-zinc-50 border border-zinc-200/70 px-3.5 py-2.5">
-                This is the demo workspace. Sign in to your account to create real workspaces.
-              </p>
-              <div className="flex justify-end gap-2">
-                <button type="button" onClick={onClose} className="rounded-lg px-3.5 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100">Cancel</button>
-                <Link href="/login?next=/workspaces" className="press rounded-lg bg-zinc-900 px-3.5 py-2 text-sm font-medium text-white hover:bg-zinc-800">Sign in to create</Link>
-              </div>
-            </div>
+            <ConnectForm problem={problem} />
           ) : (
             <CreateWorkspaceForm />
           )}

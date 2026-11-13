@@ -45,14 +45,14 @@ export default function RetellIntegration({ connected, problem, storage }: { con
       <p className="flex items-start gap-2 text-[12px] text-zinc-500">
         <svg className="mt-px h-3.5 w-3.5 shrink-0 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
         {storage === "server"
-          ? "Saved encrypted in this site's Vercel storage, so it works on every device. Only people who sign in with the team password can see the calls."
-          : "Saved encrypted in this browser only. Add Upstash Redis storage to the Vercel project to keep it on the server for every device."}
+          ? "Workspaces are saved encrypted in this site's Vercel storage, so they appear on every device. Only people who sign in can see the calls."
+          : "Workspaces are saved encrypted in this browser only."}
       </p>
     </div>
   );
 }
 
-function ConnectForm({ problem }: { problem: string | null }) {
+export function ConnectForm({ problem }: { problem: string | null }) {
   const [state, action, pending] = useActionState<ConnectState, FormData>(connectRetell, null);
   return (
     <form action={action} className="space-y-4" autoComplete="off">
@@ -73,8 +73,8 @@ function ConnectForm({ problem }: { problem: string | null }) {
           <span id="agent-help" className="mt-1.5 block text-[12px] text-zinc-500">Leave empty to include every agent on the account. You can pick agents after connecting too.</span>
         </label>
         <label className="block">
-          <span className={label}>Workspace name <span className="font-normal text-zinc-400">(optional)</span></span>
-          <input name="name" maxLength={80} placeholder="e.g. Inclusive Staffing" className={field} />
+          <span className={label}>Workspace name</span>
+          <input name="name" maxLength={80} placeholder="e.g. the client&apos;s business name" className={field} />
         </label>
         <label className="block">
           <span className={label}>Time zone</span>
@@ -82,7 +82,7 @@ function ConnectForm({ problem }: { problem: string | null }) {
         </label>
       </div>
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={pending || !!problem}>{pending ? "Checking key…" : "Connect Retell"}</Button>
+        <Button type="submit" disabled={pending || !!problem}>{pending ? "Checking key…" : "Create workspace"}</Button>
         <Msg s={state} />
       </div>
     </form>
@@ -131,12 +131,12 @@ function Connected({ info }: { info: ConnectedInfo }) {
           <div className="ml-auto flex items-center gap-2">
             {confirming ? (
               <>
-                <span className="text-[13px] text-zinc-600">Disconnect and go back to sample data?</span>
+                <span className="text-[13px] text-zinc-600">Delete this workspace and its saved Retell key?</span>
                 <Button type="button" variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
-                <Button type="button" variant="danger" disabled={leaving} onClick={() => startLeaving(() => disconnectRetell())}>{leaving ? "Disconnecting…" : "Disconnect"}</Button>
+                <Button type="button" variant="danger" disabled={leaving} onClick={() => startLeaving(() => disconnectRetell())}>{leaving ? "Deleting…" : "Delete workspace"}</Button>
               </>
             ) : (
-              <Button type="button" variant="ghost" onClick={() => setConfirming(true)}>Disconnect</Button>
+              <Button type="button" variant="ghost" onClick={() => setConfirming(true)}>Delete workspace</Button>
             )}
           </div>
         </div>
