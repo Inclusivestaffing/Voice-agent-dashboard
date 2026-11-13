@@ -19,7 +19,7 @@ import NavLinks from "@/app/w/[slug]/NavLinks";
  *   │ status · me   └──────────────────────────────────────────────┘ │
  *   └──────────────────────────────────────────────────────────────────┘
  */
-export default function AppShell({ basePath, logoHref, current, workspaces, demo = false, status, account, children }: {
+export default function AppShell({ basePath, logoHref, current, workspaces, demo = false, status, account, canLogOut = false, children }: {
   basePath: string;
   logoHref: string;
   current: WorkspaceLite;
@@ -27,6 +27,8 @@ export default function AppShell({ basePath, logoHref, current, workspaces, demo
   demo?: boolean;
   status?: React.ReactNode;
   account: { name: string; email: string };
+  /** Show Log out (the dashboard is behind the password sign-in). */
+  canLogOut?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -49,13 +51,13 @@ export default function AppShell({ basePath, logoHref, current, workspaces, demo
 
           <div className="hidden lg:block shrink-0 p-2.5 space-y-1">
             {status}
-            <SidebarAccount name={account.name} email={account.email} basePath={basePath} />
+            <SidebarAccount name={account.name} email={account.email} basePath={basePath} canLogOut={canLogOut} />
           </div>
         </aside>
 
         <div className="min-w-0 lg:py-2 lg:pr-2">
           <div className="min-h-dvh lg:min-h-[calc(100dvh-16px)] bg-white lg:rounded-2xl lg:shadow-[var(--shadow-sheet)] border-t border-zinc-200/70 lg:border-t-0">
-            <TopBar basePath={basePath} workspaceName={current.name} />
+            <TopBar basePath={basePath} workspaceName={current.name} canLogOut={canLogOut} />
             <main id="content" className="page-enter mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8 pt-6 pb-16 lg:pt-8">
               {children}
             </main>

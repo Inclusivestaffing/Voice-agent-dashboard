@@ -22,6 +22,7 @@ export default async function DemoLayout({ children }: { children: React.ReactNo
         current={ws}
         workspaces={[ws]}
         demo
+        canLogOut={gateActive() && passwordConfigured()}
         status={src.live
           ? <SyncStatus syncedAt={null} note="Live" />
           : <SyncStatus syncedAt={null} idle label="Sample data" note="Connect in Settings" />}
