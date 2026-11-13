@@ -1,20 +1,11 @@
 "use client";
 
-import { createContext, useContext } from "react";
-import { canEdit, canSeeInsights, type Role } from "@/lib/roles";
+import type { Role } from "@/lib/roles";
 import { useApp } from "@/components/context/AppContext";
 import { DEMO_QS } from "@/lib/demo/range";
 
-/** Fallback RoleContext if AppProvider is not around */
-const RoleContext = createContext<Role | null>(null);
-export function RoleProvider({ role, children }: { role: Role; children: React.ReactNode }) {
-  return <RoleContext.Provider value={role}>{children}</RoleContext.Provider>;
-}
-
 export function useRole(): Role {
-  const app = useApp();
-  const legacyRole = useContext(RoleContext);
-  return app?.role ?? legacyRole ?? "admin";
+  return useApp().role;
 }
 
 const I = ({ children }: { children: React.ReactNode }) => (
@@ -34,11 +25,6 @@ export const Icons = {
     <I>
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
       <polyline points="16 2 20 6 16 10" />
-    </I>
-  ),
-  insights: (
-    <I>
-      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
     </I>
   ),
   reports: (
@@ -70,8 +56,8 @@ export interface NavItem {
   keepQuery: boolean;
 }
 
-/** Workspace sections visible to a role. `basePath` is "/demo" or `/w/<slug>`. */
-export function navItems(basePath: string, role: Role, opts: { settings?: boolean } = {}): NavItem[] {
+/** Workspace sections. `basePath` is "/demo" or `/w/<slug>`. */
+export function navItems(basePath: string, _role: Role, opts: { settings?: boolean } = {}): NavItem[] {
   const demo = basePath === "/demo";
   const includeSettings = opts.settings ?? true;
 
@@ -79,20 +65,17 @@ export function navItems(basePath: string, role: Role, opts: { settings?: boolea
     { href: demo ? "/demo" : `${basePath}/overview`, label: "Analytics", icon: Icons.analytics, exact: demo, keepQuery: true },
     { href: `${basePath}/calls`, label: "Call History", icon: Icons.calls, keepQuery: true },
   ];
-  if (canSeeInsights(role)) {
-    items.push({ href: `${basePath}/insights`, label: "Insights", icon: Icons.insights, keepQuery: true });
-  }
   items.push({ href: `${basePath}/reports`, label: "Reports", icon: Icons.reports, keepQuery: false });
-  if (includeSettings && canEdit(role)) {
+  if (includeSettings) {
     items.push({ href: `${basePath}/settings`, label: "Settings", icon: Icons.settings, keepQuery: false });
   }
   return items;
 }
 
 /** Carry the date range and agent across sections so switching keeps context. */
-export function keptQuery(sp: URLSearchParams | { get(k: string): string | null }, basePath?: string) {
+export function keptQuery(sp: URLSearchParams | { get(k: string): string | null }, basePath?: string, live = false) {
   // The demo needs its sample window in the URL; adding it here avoids a server redirect per click.
-  if (basePath === "/demo" && !sp.get("range")) return `?${DEMO_QS}`;
+  if (basePath === "/demo" && !live && !sp.get("range")) return `?${DEMO_QS}`;
   const keep = new URLSearchParams();
   for (const k of ["range", "from", "to", "ft", "tt", "agent"]) {
     const v = sp.get(k);

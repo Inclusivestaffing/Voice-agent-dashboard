@@ -28,8 +28,8 @@ export default async function ReportPage({ params }: { params: Promise<{ slug: s
         <Link href={`/w/${slug}/reports`} className="text-xs text-dim hover:text-ink">← All reports</Link>
         <div className="flex gap-2 flex-wrap">
           <CopyLink url={shareUrl} />
-          <a href={`/api/reports/${r.id}/pdf`} className="bg-ink text-white px-3.5 py-2 text-xs font-medium hover:opacity-90 rounded-xl">Download PDF</a>
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer" className="border border-line-strong bg-surface px-3.5 py-2 text-xs font-medium text-dim rounded-xl">Open public page ↗</a>
+          <a href={`/api/reports/${r.id}/pdf`} className="bg-ink text-white px-3.5 py-2 text-xs font-medium hover:opacity-90 rounded-lg">Download PDF</a>
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer" className="border border-line-strong bg-surface px-3.5 py-2 text-xs font-medium text-dim rounded-lg">Open public page ↗</a>
           {canEdit(role) && <ReportActions slug={slug} reportId={r.id} />}
         </div>
       </div>
@@ -38,9 +38,9 @@ export default async function ReportPage({ params }: { params: Promise<{ slug: s
         {narrative?._source ? ` Summary written by ${narrative._source}.` : ""}
       </p>
       {narrative?._unverified_numbers?.length ? (
-        <p className="mb-4 bg-warn-bg text-warn text-xs px-3 py-2 rounded-xl">Check before sending: the summary mentions numbers we couldn&apos;t match to the data ({narrative._unverified_numbers.join(", ")}).</p>
+        <p className="mb-4 bg-warn-bg text-warn text-xs px-3 py-2 rounded-lg">Check before sending: the summary mentions numbers we couldn&apos;t match to the data ({narrative._unverified_numbers.join(", ")}).</p>
       ) : null}
-      <div className="border border-line -mx-4 sm:mx-0 rounded-2xl overflow-hidden">
+      <div className="border border-line -mx-4 sm:mx-0 rounded-xl overflow-hidden">
         <ReportView snap={r.snapshot as ReportSnapshot} narrative={narrative} />
       </div>
     </>

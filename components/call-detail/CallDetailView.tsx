@@ -35,44 +35,44 @@ export default function CallDetailView({ call, raw, metrics, analysis, timezone,
   return (
     <>
       <div className="flex items-center justify-between gap-3 mb-4 text-xs">
-        <Link href={nav.back} className="text-slate-500 hover:text-slate-900 font-medium inline-flex items-center gap-1 transition">
+        <Link href={nav.back} className="text-zinc-500 hover:text-zinc-900 font-medium inline-flex items-center gap-1 transition">
           ← Back to Call History
         </Link>
         <div className="flex items-center gap-1.5">
           {nav.prev ? (
-            <Link href={nav.prev} className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition">
+            <Link href={nav.prev} className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 font-semibold text-zinc-700 shadow-2xs hover:bg-zinc-50 transition">
               ← Prev
             </Link>
           ) : (
-            <span className="rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-1.5 text-slate-300 cursor-not-allowed">
+            <span className="rounded-lg border border-zinc-100 bg-zinc-50/50 px-3 py-1.5 text-zinc-300 cursor-not-allowed">
               ← Prev
             </span>
           )}
           {nav.next ? (
-            <Link href={nav.next} className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition">
+            <Link href={nav.next} className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 font-semibold text-zinc-700 shadow-2xs hover:bg-zinc-50 transition">
               Next →
             </Link>
           ) : (
-            <span className="rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-1.5 text-slate-300 cursor-not-allowed">
+            <span className="rounded-lg border border-zinc-100 bg-zinc-50/50 px-3 py-1.5 text-zinc-300 cursor-not-allowed">
               Next →
             </span>
           )}
         </div>
       </div>
 
-      <header className="border-b border-slate-200/90 pb-4 mb-6">
+      <header className="border-b border-zinc-200/90 pb-4 mb-6">
         <div className="flex items-center gap-2 flex-wrap">
           <OutcomePill outcome={analysis?.outcome} />
           {call.direction && (
-            <span className="text-xs font-medium text-slate-600 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
+            <span className="text-xs font-medium text-zinc-600 bg-zinc-100 border border-zinc-200 rounded-full px-2 py-0.5">
               {call.direction}
             </span>
           )}
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mt-2">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-900 mt-2">
           {d?.caller_intent ?? call.call_summary?.slice(0, 90) ?? "Call"}
         </h1>
-        <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-2.5 text-xs text-slate-500">
+        <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-2.5 text-xs text-zinc-500">
           <span>{fmtDate(call.start_ts, timezone)}</span>
           <span>{call.from_number ?? "Web call"}{call.to_number ? ` → ${call.to_number}` : ""}</span>
           <span>{fmtDur(durationS)}</span>

@@ -3,15 +3,22 @@
 /* ── Design tokens: brand (yellow on ink, from the Open Water Marine report) + validated viz palette ── */
 :root {
   color-scheme: light;
-  --bg: #f6f7f9;
+  /* Core palette
+     Frame   #F4F4F5  app background behind the sheet (sidebar sits on it)
+     Paper   #FFFFFF  the content sheet and cards
+     Ink     #18181B  text and primary actions
+     Graphite #52525B / Ash #71717A  secondary and muted text
+     Line    #E4E4E7  borders (used at 70–100%)
+     Signal  #FACC15  brand yellow: the AI spark and active markers only */
+  --bg: #f4f4f5;
   --surface: #ffffff;
-  --surface-2: #f1f5f9;
-  --surface-3: #e2e8f0;
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --text: #0f172a;
-  --text-dim: #475569;
-  --text-muted: #64748b;
+  --surface-2: #f4f4f5;
+  --surface-3: #e4e4e7;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text: #18181b;
+  --text-dim: #52525b;
+  --text-muted: #71717a;
   --brand: #facc15;
   --brand-strong: #eab308;
   --brand-ink: #713f12;
@@ -25,8 +32,8 @@
   --warn-bg: #fef3c7;
 
   /* chart chrome */
-  --grid: #ececf3;
-  --axis: #c3c2b7;
+  --grid: #f0f0f2;
+  --axis: #d4d4d8;
   /* categorical slots (validated reference order) */
   --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
   --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
@@ -58,20 +65,32 @@
   --color-warn: var(--warn);
   --color-warn-bg: var(--warn-bg);
   /* Elevation: soft, layered shadows (premium feel without heavy borders). */
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 14px -6px rgb(15 23 42 / 0.08);
-  --shadow-card-hover: 0 2px 4px rgb(15 23 42 / 0.05), 0 14px 28px -10px rgb(15 23 42 / 0.14);
-  --shadow-pop: 0 2px 6px rgb(15 23 42 / 0.06), 0 18px 40px -12px rgb(15 23 42 / 0.22);
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Elevation: cards sit flat on the sheet (border does the work); only floating things cast shadows. */
+  --shadow-card: 0 1px 0 rgb(24 24 27 / 0.03);
+  --shadow-card-hover: 0 1px 2px rgb(24 24 27 / 0.04), 0 6px 16px -8px rgb(24 24 27 / 0.12);
+  --shadow-pop: 0 0 0 1px rgb(24 24 27 / 0.04), 0 4px 8px -2px rgb(24 24 27 / 0.06), 0 16px 32px -8px rgb(24 24 27 / 0.16);
+  --shadow-sheet: 0 0 0 1px rgb(24 24 27 / 0.05), 0 1px 2px rgb(24 24 27 / 0.04), 0 8px 24px -12px rgb(24 24 27 / 0.08);
+  --font-sans: var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, Menlo, monospace;
+  --font-display: var(--font-sans);
 }
 
 html, body { background: var(--bg); color: var(--text); }
-body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
 .tabular { font-variant-numeric: tabular-nums; }
-/* Retell dashboard typography: Inter 400/500/600, sentence case or subtle uppercase tracking */
-body { font-size: 14px; letter-spacing: -0.01em; }
-.eyebrow { font-family: var(--font-sans); font-size: 11px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.04em; text-transform: uppercase; }
-.section-title { font-family: var(--font-sans); font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.015em; line-height: 1.35; }
+/* Typography: one family (Geist). Scale 12 / 13 / 14 / 16 / 20 / 24 px; weights 400 body, 500 labels,
+   600 headings. Tracking is tightened only on headings; numbers are tabular everywhere data is compared. */
+body { font-size: 14px; line-height: 1.5; font-feature-settings: "ss01"; }
+@layer base {
+  :where(h1, h2, h3):not(.report-root *) { letter-spacing: -0.012em; text-wrap: balance; }
+  :where(h1):not(.report-root *) { letter-spacing: -0.022em; }
+  :where(p) { text-wrap: pretty; }
+  :where(td, th, .tabular) { font-variant-numeric: tabular-nums; }
+}
+/* iOS zooms into inputs smaller than 16px; keep form text at 16px on phones. */
+@media (max-width: 640px) { input, select, textarea { font-size: 16px !important; } }
+.eyebrow { font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--text-dim); }
+.section-title { font-family: var(--font-sans); font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.012em; line-height: 1.35; }
 /* The client report keeps its own (Open Water Marine) design: monospace caps labels with a brand bar. */
 .report-root .eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
 .report-root .section-title { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--text-dim); }
@@ -81,7 +100,7 @@ body { font-size: 14px; letter-spacing: -0.01em; }
 details > summary { list-style: none; cursor: pointer; }
 details > summary::-webkit-details-marker { display: none; }
 /* Keyboard focus ring (base layer so a component can opt out with focus-visible:outline-none). */
-@layer base { :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; } }
+@layer base { :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 6px; } }
 
 /* ───────── Interaction & motion system ─────────
    Timing follows the response-time limits: feedback < 100 ms (instant), micro-interactions
@@ -107,7 +126,7 @@ a, button, select, summary, [role="button"], input, label { touch-action: manipu
 .press:active { transform: scale(.98); }
 
 /* Skeleton shimmer for loading states. */
-.skeleton { background: linear-gradient(90deg, #eef1f5 0%, #f6f8fa 40%, #eef1f5 80%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+.skeleton { background: linear-gradient(90deg, #f0f0f2 0%, #f7f7f8 40%, #f0f0f2 80%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 /* Skeletons fade in after a short delay so very fast navigations don't flash them. */
 .skeleton-enter { animation: fade-in var(--dur-enter) var(--ease-out) 80ms backwards; }
@@ -120,7 +139,7 @@ a, button, select, summary, [role="button"], input, label { touch-action: manipu
 /* New page content eases in instead of popping. */
 /* `backwards`, not `both`: once finished the animation must stop applying, otherwise every section
    keeps a stacking context and popovers (date range, filters) render underneath later sections. */
-main > * { animation: fade-in var(--dur-enter) var(--ease-out) backwards; }
+.page-enter { animation: fade var(--dur-enter) var(--ease-out) backwards; }
 @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
 /* Thin progress bar for in-page updates (filters, date range). */
@@ -138,12 +157,13 @@ main > * { animation: fade-in var(--dur-enter) var(--ease-out) backwards; }
 }
 
 /* ───────── Premium surfaces ───────── */
-.kbd { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; border: 1px solid #e2e8f0; border-bottom-width: 2px; background: #fff; color: #64748b; font: 500 11px/1 var(--font-sans); }
+.kbd { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; border: 1px solid #e4e4e7; border-bottom-width: 2px; background: #fff; color: #71717a; font: 500 11px/1 var(--font-sans); }
 .palette-fade { animation: fade 140ms var(--ease-out) backwards; }
 .palette-in { animation: pop-in 180ms var(--ease-out) backwards; }
 .toast-in { animation: pop-in 200ms var(--ease-out) backwards; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes pop-in { from { opacity: 0; transform: translateY(6px) scale(.98); } }
 /* Thin, quiet scrollbars inside panels. */
-* { scrollbar-width: thin; scrollbar-color: #d5d9e0 transparent; }
-::selection { background: #fde68a; color: #0f172a; }
+* { scrollbar-width: thin; scrollbar-color: #d4d4d8 transparent; }
+::selection { background: #fde68a; color: #18181b; }
+@media (pointer: fine) { html { overscroll-behavior: none; } }

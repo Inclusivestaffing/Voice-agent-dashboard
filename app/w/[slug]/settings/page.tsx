@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { getWorkspace } from "@/lib/db/queries";
 import { supabaseAdmin } from "@/lib/db/supabase";
 import { appOrigin } from "@/lib/origin";
@@ -6,16 +5,13 @@ import { ALERT_METRICS } from "@/lib/alerts";
 import { Card } from "@/components/ui";
 import { ConnectForm, SettingsForm, InviteForm, AlertForm, MemberRow, AlertRow, CopyField } from "./forms";
 import SyncButtons from "../overview/SyncButtons";
-import { canEdit, ROLE_LABEL, isRole } from "@/lib/roles";
-import RoleControlsCard from "@/components/settings/RoleControlsCard";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export default async function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { db, ws, role, user } = await getWorkspace(slug);
-  if (!canEdit(role)) redirect(`/w/${slug}/overview`);
+  const { db, ws, user } = await getWorkspace(slug);
   const admin = supabaseAdmin();
   const [{ data: conn }, { data: members }, { data: invites }, { data: alerts }, { data: runs }] = await Promise.all([
     admin.from("retell_connections").select("api_key_last4, last_synced_at, last_sync_error").eq("workspace_id", ws.id).maybeSingle(),
@@ -34,11 +30,10 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
   return (
     <>
       <div className="mb-6">
-        <div className="eyebrow">{ws.name}</div>
-        <h1 className="text-xl font-medium mt-1">Settings</h1>
+        <h1 className="text-2xl leading-tight font-semibold tracking-[-0.022em] text-zinc-900">Settings</h1>
+        <p className="text-sm text-zinc-500 mt-1.5 max-w-2xl">Retell connection, branding, team and alerts for this workspace.</p>
       </div>
       <div className="grid xl:grid-cols-2 gap-5">
-        <RoleControlsCard email={user?.email ?? "admin@inclusivestaffing.com"} name={ws.name} />
         <Card title="Retell connection" sub={conn ? `Connected · key ····${conn.api_key_last4}` : "Not connected"}>
           <ConnectForm workspaceId={ws.id} connected={!!conn} />
           <div className="mt-5 pt-5 border-t border-line space-y-3">
@@ -64,13 +59,13 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
           <SettingsForm ws={ws} />
         </Card>
 
-        <Card title="Team" sub="Owner: everything · Admin: settings, team and reports · User: all dashboards, read-only · Client: analytics, calls and reports">
+        <Card title="Team" sub="Everyone you invite is an Admin: full access to analytics, calls, reports and settings">
           <ul className="divide-y divide-line mb-4">
             {(members ?? []).map((m) => (
-              <MemberRow key={m.user_id} workspaceId={ws.id} userId={m.user_id} email={emails.get(m.user_id) ?? m.user_id} role={isRole(m.role) ? ROLE_LABEL[m.role] : m.role} isSelf={m.user_id === user.id} canRemove={role === "owner"} />
+              <MemberRow key={m.user_id} workspaceId={ws.id} userId={m.user_id} email={emails.get(m.user_id) ?? m.user_id} role={m.role} isSelf={m.user_id === user.id} canRemove />
             ))}
             {(invites ?? []).map((i) => (
-              <li key={i.email} className="flex justify-between py-2 text-sm"><span>{i.email} <span className="text-xs text-muted">invited</span></span><span className="text-xs text-dim">{isRole(i.role) ? ROLE_LABEL[i.role] : i.role}</span></li>
+              <li key={i.email} className="flex justify-between py-2 text-sm"><span>{i.email} <span className="text-xs text-muted">invited</span></span><span className="text-xs text-dim">Admin</span></li>
             ))}
           </ul>
           <InviteForm workspaceId={ws.id} />

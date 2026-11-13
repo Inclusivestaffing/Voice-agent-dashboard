@@ -33,24 +33,24 @@ export default async function CallsPage({ params, searchParams }: { params: Prom
     <>
       <div className="flex items-end justify-between gap-4 flex-wrap mb-5">
         <div>
-          <div className="eyebrow">{ws.name}</div>
-          <h1 className="text-xl font-medium mt-1">Call History</h1>
+          <h1 className="text-2xl leading-tight font-semibold tracking-[-0.022em] text-zinc-900">Call History</h1>
+          <p className="text-sm text-zinc-500 mt-1.5 max-w-2xl">Every call with its outcome. Open one to hear it, read the transcript and see the AI diagnosis.</p>
         </div>
         <div className="flex items-center gap-3 text-xs text-dim">
           <span>{total.toLocaleString()} calls</span>
-          <a href={`/api/w/${ws.id}/export?${base}`} className="border border-line-strong bg-surface px-3 py-1.5 font-medium hover:text-ink rounded-xl">Export CSV</a>
+          <a href={`/api/w/${ws.id}/export?${base}`} className="border border-line-strong bg-surface px-3 py-1.5 font-medium hover:text-ink rounded-lg">Export CSV</a>
         </div>
       </div>
-      <Suspense><FilterBar workspaceId={ws.id} options={options} savedViews={views ?? []} /></Suspense>
+      <Suspense><FilterBar workspaceId={ws.id} options={options} savedViews={views ?? []} timezone={ws.timezone} /></Suspense>
 
       {rows.length === 0 ? <Empty title="No calls match these filters" /> : (
         <>
-          <CallHistoryTable rows={rows.map(toHistoryRow)} timezone={ws.timezone} detailBase={`/w/${slug}/calls`} navQuery={nav.toString()} sortBase={base} sort={sort} dir={dir} />
+          <CallHistoryTable rows={rows.map(toHistoryRow)} timezone={ws.timezone} detailBase={`/w/${slug}/calls`} navQuery={nav.toString()} sortBase={base} sort={sort} dir={dir} drawerApi={`/api/w/${ws.id}/calls`} />
           <div className="flex items-center justify-between mt-4 text-xs">
             <span className="text-dim">Showing {page * PAGE_SIZE + 1}–{Math.min(total, page * PAGE_SIZE + rows.length)} of {total.toLocaleString()}</span>
             <div className="flex gap-2">
-              {page > 0 && <Link href={pageLink(page - 1)} className="border border-line-strong px-3 py-1.5 bg-surface rounded-xl">← Prev</Link>}
-              {(page + 1) * PAGE_SIZE < total && <Link href={pageLink(page + 1)} className="border border-line-strong px-3 py-1.5 bg-surface rounded-xl">Next →</Link>}
+              {page > 0 && <Link href={pageLink(page - 1)} className="border border-line-strong px-3 py-1.5 bg-surface rounded-lg">← Prev</Link>}
+              {(page + 1) * PAGE_SIZE < total && <Link href={pageLink(page + 1)} className="border border-line-strong px-3 py-1.5 bg-surface rounded-lg">Next →</Link>}
             </div>
           </div>
         </>

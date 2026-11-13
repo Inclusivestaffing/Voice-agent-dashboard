@@ -47,7 +47,7 @@ export interface ChartProps {
 
 const SLOTS = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6", "--s7", "--s8"];
 const TOKEN_NAMES = ["--surface", "--text", "--text-dim", "--text-muted", "--grid", "--axis", "--single", "--neutral-1", "--neutral-2",
-  "--status-good", "--status-warning", "--status-serious", "--status-critical", "--border", ...SLOTS];
+  "--status-good", "--status-warning", "--status-serious", "--status-critical", "--border", "--border-strong", ...SLOTS];
 
 function readTokens(): Record<string, string> {
   if (typeof window === "undefined") return {};
@@ -124,10 +124,11 @@ export default function Chart(props: ChartProps) {
       ? { animation: false }
       : { animationDuration: 300, animationEasing: "cubicOut", animationDurationUpdate: 200, animationEasingUpdate: "cubicOut" };
     const color = (name: string | undefined, i: number) => t[name ?? ""] || t[SLOTS[i % SLOTS.length]];
-    const textStyle = { color: t["--text-dim"], fontFamily: "Inter, 'Inter Fallback', system-ui, sans-serif", fontSize: 12 };
+    const textStyle = { color: t["--text-dim"], fontFamily: "Geist, 'Geist Fallback', system-ui, sans-serif", fontSize: 12 };
     const tooltip = {
       backgroundColor: t["--surface"], borderColor: t["--border"], borderWidth: 1,
-      textStyle: { color: t["--text"], fontSize: 12 }, extraCssText: "box-shadow:0 6px 24px rgba(0,0,0,.12);border-radius:6px;",
+      textStyle: { color: t["--text"], fontSize: 12, fontFamily: textStyle.fontFamily }, padding: [8, 10],
+      extraCssText: "box-shadow:0 0 0 1px rgba(24,24,27,.04),0 8px 24px -6px rgba(24,24,27,.18);border-radius:10px;border:0;",
     };
     const multi = series.length >= 2;
     const legend = multi ? { type: "plain", top: 0, left: 0, right: toolbar ? 88 : 0, icon: "roundRect", itemWidth: 10, itemHeight: 10, itemGap: 10, textStyle } : undefined;
@@ -148,10 +149,10 @@ export default function Chart(props: ChartProps) {
           } },
         series: [{
           type: "pie", radius: legendPosition === "bottom" ? ["40%", "56%"] : ["58%", "78%"], center: legendPosition === "bottom" ? ["50%", "34%"] : ["28%", "50%"], avoidLabelOverlap: true,
-          label: { show: true, position: "center", formatter: () => `${total}`, fontSize: 24, fontWeight: 500, color: t["--text"], fontFamily: "Inter, system-ui, sans-serif" },
+          label: { show: true, position: "center", formatter: () => `${total}`, fontSize: 22, fontWeight: 600, color: t["--text"], fontFamily: "Geist, system-ui, sans-serif" },
           labelLine: { show: false },
-          itemStyle: { borderColor: t["--surface"], borderWidth: 2 },
-          emphasis: { scale: true, scaleSize: 4, label: { show: true } },
+          itemStyle: { borderColor: t["--surface"], borderWidth: 2, borderRadius: 3 },
+          emphasis: { scale: true, scaleSize: 3, label: { show: true } },
           data: categories.map((c, i) => ({ name: c, value: series[0].data[i] ?? 0, itemStyle: { color: color(sliceColors?.[i], i) } })),
         }],
       };
@@ -160,11 +161,11 @@ export default function Chart(props: ChartProps) {
     const horizontal = kind === "bar";
     const catAxis = {
       type: "category", data: categories,
-      axisLine: { lineStyle: { color: t["--axis"] } }, axisTick: { show: false },
+      axisLine: { lineStyle: { color: t["--border"] } }, axisTick: { show: false },
       axisLabel: { ...textStyle, color: t["--text-muted"], hideOverlap: true, width: horizontal ? 120 : undefined, overflow: "truncate" },
     };
     const valAxis = {
-      type: "value", splitLine: { lineStyle: { color: t["--grid"] } }, axisLine: { show: false },
+      type: "value", splitLine: { lineStyle: { color: t["--grid"], type: [3, 3] } }, axisLine: { show: false },
       axisLabel: { ...textStyle, color: t["--text-muted"], hideOverlap: true, formatter: (v: number) => formatValue(v, unit) },
       splitNumber: horizontal ? 3 : 5,
     };
@@ -179,18 +180,22 @@ export default function Chart(props: ChartProps) {
         };
       }
       if (kind === "line") {
+        const points = sr.data.filter((v) => v !== null && v !== undefined).length;
+        const sparse = points < sr.data.length || points <= 24;
         return {
-          name: sr.name, type: "line", data: sr.data, smooth: false, connectNulls: false, showSymbol: false,
-          symbolSize: 8, lineStyle: { width: 2, color: c }, itemStyle: { color: c, borderColor: t["--surface"], borderWidth: 2 },
+          name: sr.name, type: "line", data: sr.data, smooth: 0.2, smoothMonotone: "x", connectNulls: true, showSymbol: sparse,
+          symbol: "circle", symbolSize: sparse ? 6 : 8, lineStyle: { width: 2, color: c }, itemStyle: { color: c, borderColor: t["--surface"], borderWidth: 2 },
+          // A faint wash under a single line gives it weight without adding a second colour.
+          areaStyle: mainCount === 1 ? { color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: `${c}26` }, { offset: 1, color: `${c}00` }] } } : undefined,
           emphasis: { focus: "series" },
         };
       }
       return {
         name: sr.name, type: "bar", data: sr.data, stack: kind === "stacked" ? "total" : undefined,
-        barMaxWidth: horizontal ? 22 : 36, barGap: "10%",
+        barMaxWidth: horizontal ? 18 : 28, barGap: "12%",
         itemStyle: {
           color: c, borderColor: t["--surface"], borderWidth: kind === "stacked" || multi ? 1 : 0,
-          borderRadius: kind === "stacked" ? 0 : horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0],
+          borderRadius: kind === "stacked" ? 0 : horizontal ? [0, 5, 5, 0] : [5, 5, 0, 0],
         },
         label: showLabels ? {
           show: true, position: horizontal ? "right" : "top", color: t["--text"], fontSize: 12, fontWeight: 500,
@@ -204,7 +209,7 @@ export default function Chart(props: ChartProps) {
       legend,
       tooltip: {
         ...tooltip, trigger: "axis",
-        axisPointer: { type: kind === "line" ? "line" : "shadow", lineStyle: { color: t["--axis"] }, shadowStyle: { color: "rgba(127,127,127,.08)" } },
+        axisPointer: { type: kind === "line" ? "line" : "shadow", lineStyle: { color: t["--border-strong"], type: [3, 3] }, shadowStyle: { color: "rgba(24,24,27,.04)" } },
         formatter: (ps: TipParam[] | TipParam) => {
           const arr = Array.isArray(ps) ? ps : [ps];
           const head = esc(arr[0]?.axisValueLabel ?? arr[0]?.name ?? "");
@@ -222,7 +227,7 @@ export default function Chart(props: ChartProps) {
 
   // Reserve the chart's exact height before it draws, so nothing below it jumps.
   if (!option || !visible) {
-    return <div ref={ref} role="img" aria-label={ariaLabel} aria-busy="true" style={{ height }} className="skeleton rounded-xl opacity-60" />;
+    return <div ref={ref} role="img" aria-label={ariaLabel} aria-busy="true" style={{ height }} className="skeleton rounded-lg opacity-60" />;
   }
   return (
     <div ref={ref} className="chart-enter group/chart relative">
@@ -299,7 +304,7 @@ function downloadCsv(kind: ChartKind, categories: string[], series: ChartSeries[
 function ToolButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onClick} aria-label={label} title={label}
-      className="grid h-7 w-7 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900">
+      className="grid h-7 w-7 place-items-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900">
       <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{children}</svg>
     </button>
   );
@@ -307,7 +312,7 @@ function ToolButton({ label, onClick, children }: { label: string; onClick: () =
 
 function ChartToolbar({ onExpand, onPng, onCsv }: { onExpand: () => void; onPng: () => void; onCsv: () => void }) {
   return (
-    <div className="absolute -top-1 right-0 z-10 flex items-center gap-0.5 rounded-xl border border-slate-200/70 bg-white/95 p-0.5 opacity-0 shadow-card backdrop-blur transition-opacity duration-150 group-hover/chart:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
+    <div className="absolute -top-1 right-0 z-10 flex items-center gap-0.5 rounded-lg border border-zinc-200/70 bg-white/95 p-0.5 opacity-0 shadow-card backdrop-blur transition-opacity duration-150 group-hover/chart:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
       <ToolButton label="Expand chart" onClick={onExpand}><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></ToolButton>
       <ToolButton label="Download as PNG" onClick={onPng}><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></ToolButton>
       <ToolButton label="Download data (CSV)" onClick={onCsv}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5M12 15V3" /></ToolButton>
@@ -325,11 +330,11 @@ function ExpandedChart({ title, onClose, children }: { title: string; onClose: (
   }, [onClose]);
   return createPortal(
     <div className="fixed inset-0 z-[72] flex items-center justify-center p-4 sm:p-8" role="presentation">
-      <div className="palette-fade absolute inset-0 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-label={title} className="palette-in relative w-full max-w-6xl rounded-3xl border border-slate-200/70 bg-white p-6 shadow-pop">
+      <div className="palette-fade absolute inset-0 bg-zinc-900/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-label={title} className="palette-in relative w-full max-w-6xl rounded-3xl border border-zinc-200/70 bg-white p-6 shadow-pop">
         <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold tracking-tight text-slate-900">{title}</h2>
-          <button onClick={onClose} autoFocus aria-label="Close" className="grid h-9 w-9 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900">
+          <h2 className="text-lg font-semibold tracking-tight text-zinc-900">{title}</h2>
+          <button onClick={onClose} autoFocus aria-label="Close" className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900">
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M18 6 6 18M6 6l12 12" /></svg>
           </button>
         </div>

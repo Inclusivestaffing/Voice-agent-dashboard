@@ -1,28 +1,25 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { Button } from "@/components/ui";
+import ReportPeriodField from "@/components/reports/ReportPeriodField";
+import { DEMO_RANGE } from "@/lib/demo/range";
 
-const PRESETS: [string, string, string][] = [
-  ["Whole sample (Aug 27 – Sep 30)", "2026-08-27", "2026-09-30"],
-  ["September 2026", "2026-09-01", "2026-09-30"],
-  ["Last week of August", "2026-08-27", "2026-08-31"],
-  ["Sep 1 – 15", "2026-09-01", "2026-09-15"],
-  ["Sep 16 – 30", "2026-09-16", "2026-09-30"],
-];
+const field = "mt-1.5 w-full h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 shadow-[0_1px_1px_rgb(15_23_42/0.03)] hover:border-zinc-300 focus:border-zinc-400 focus-visible:outline-none focus:ring-4 focus:ring-zinc-900/5";
 
+/** Demo: periods count back from the last day of the sample calls (Sep 30, 2026). */
 export default function DemoReportForm() {
   const router = useRouter();
-  const [from, setFrom] = useState("2026-08-27");
-  const [to, setTo] = useState("2026-09-30");
+  const [range, setRange] = useState<[string, string]>([DEMO_RANGE.from, DEMO_RANGE.to]);
   const [version, setVersion] = useState("");
   const [err, setErr] = useState("");
   const [pending, start] = useTransition();
-  const input = "mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-xl";
+  const onChange = useCallback((a: string, b: string) => setRange([a, b]), []);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    const [from, to] = range;
     if (!from || !to || from > to) { setErr("Pick a valid start and end date."); return; }
     setErr("");
     const p = new URLSearchParams({ range: "custom", from, to });
@@ -31,22 +28,16 @@ export default function DemoReportForm() {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <div className="flex flex-wrap gap-1.5">
-        {PRESETS.map(([label, a, b]) => (
-          <button type="button" key={label} onClick={() => { setFrom(a); setTo(b); }} aria-pressed={from === a && to === b}
-            className={`px-3 py-1.5 text-xs font-medium border ${from === a && to === b ? "bg-ink border-ink text-white" : "border-line-strong text-dim hover:text-ink"} rounded-xl`}>{label}</button>
-        ))}
-      </div>
-      <div className="grid sm:grid-cols-3 gap-4">
-        <label className="block"><span className="eyebrow">From</span><input type="date" value={from} min="2026-08-27" max="2026-09-30" onChange={(e) => setFrom(e.target.value)} className={input} required /></label>
-        <label className="block"><span className="eyebrow">To</span><input type="date" value={to} min="2026-08-27" max="2026-09-30" onChange={(e) => setTo(e.target.value)} className={input} required /></label>
-        <label className="block"><span className="eyebrow">Agent version</span>
-          <select value={version} onChange={(e) => setVersion(e.target.value)} className={input}>
+    <form onSubmit={submit} className="space-y-5">
+      <div className="grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-4 items-start max-w-3xl">
+        <ReportPeriodField today={DEMO_RANGE.to} defaultPreset="this_month" onChange={onChange} min="2026-01-01" max={DEMO_RANGE.to} />
+        <label className="block"><span className="block text-[13px] font-medium text-zinc-700">Agent version</span>
+          <select value={version} onChange={(e) => setVersion(e.target.value)} className={field}>
             <option value="">All versions</option><option value="allen:4">Allen v4</option><option value="allen:5">Allen v5</option>
           </select>
         </label>
       </div>
+      <p className="text-xs text-zinc-500">Sample calls run from Aug 27 to Sep 30, 2026, so periods count back from Sep 30.</p>
       {err && <p className="text-sm text-bad" role="alert">{err}</p>}
       <Button type="submit" disabled={pending}>{pending ? "Building report…" : "Generate report"}</Button>
     </form>

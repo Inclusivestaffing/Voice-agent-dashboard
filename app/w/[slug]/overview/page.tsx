@@ -62,11 +62,11 @@ export default async function Overview({ params, searchParams }: { params: Promi
       <Suspense><FilterBar workspaceId={ws.id} options={options} savedViews={views ?? []} timezone={ws.timezone} /></Suspense>
 
       {calls.length === 0 ? <Empty title="No calls match these filters">Try a wider date range or clear some filters.</Empty> : (
-        <div className="space-y-6">
+        <div className="space-y-14">
+          <OverviewDashboard s={s} p={p} calls={calls} range={range} timezone={ws.timezone} agentName={ws.agent_display_name} bucket={bucket}
+            callsHref={callsLink} />
           <RetellAnalytics calls={calls} prevCalls={prevCalls} range={range} prevRange={prevRange} timezone={ws.timezone} bucket={bucket} compare={compare}
             breakdown={breakdown} customKeys={options.customFields.map((c) => c.key)} />
-          <OverviewDashboard s={s} p={p} calls={calls} range={range} timezone={ws.timezone} agentName={ws.agent_display_name} bucket={bucket}
-            callsHref={callsLink} insightsHref={`/w/${slug}/insights?${q}`} />
 
           <section className="space-y-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -100,8 +100,8 @@ function PageHead({ ws, right }: { ws: string; right?: React.ReactNode }) {
   return (
     <div className="flex items-end justify-between gap-4 flex-wrap mb-4">
       <div>
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{ws} · Voice Analytics</div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">Analytics Dashboard</h1>
+        <h1 className="text-2xl leading-tight font-semibold tracking-[-0.022em] text-zinc-900">Analytics</h1>
+        <p className="text-sm text-zinc-500 mt-1.5 max-w-2xl">How your voice agent handled calls in this period.</p>
       </div>
       {right}
     </div>

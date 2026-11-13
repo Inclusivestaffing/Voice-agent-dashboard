@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { timeSeries, breakdownTotals, METRICS, summarize, type AnalyticsCall, type Bucket, type Dimension, type Measure } from "@/lib/metrics/aggregate";
 import { SENTIMENT_COLOR } from "@/lib/colors";
 import Chart, { type ChartSeries } from "@/components/charts/Chart";
-import { Card, fmtDur, fmtMs, humanize } from "@/components/ui";
+import { Card, Kpi, KpiGrid, fmtDur, fmtMs, humanize } from "@/components/ui";
 import AnalyticsControls from "./AnalyticsControls";
 
 /** Breakdown options exactly as in Retell's dashboard-level "Breakdown" menu. */
@@ -67,29 +67,23 @@ export default function RetellAnalytics({ calls, prevCalls, range, prevRange, ti
   const statusD = donut("call_status", (k) => (k === "ended" ? "--s3" : k === "error" ? "--status-critical" : "--neutral-1"));
   const sub = breakdown ? `By ${RETELL_BREAKDOWNS.find((b) => b.id === breakdown)?.label ?? humanize(breakdown.replace("custom:", ""))}` : `Per ${bucket}`;
 
-  const Big = ({ label, value }: { label: string; value: string }) => (
-    <div className="bg-white border border-slate-200/70 rounded-2xl p-5 shadow-card">
-      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</div>
-      <div className="mt-3 bg-slate-50/80 border border-slate-100 rounded-xl py-8 text-center text-[32px] font-bold text-slate-900 tabular tracking-wide">{value}</div>
-    </div>
-  );
 
   return (
     <section aria-labelledby="retell-analytics" className="space-y-5">
-      <div className="flex items-end justify-between gap-3 flex-wrap">
+      <div className="flex items-end justify-between gap-x-6 gap-y-3 flex-wrap border-t border-zinc-200/80 pt-8">
         <div>
-          <h2 id="retell-analytics" className="section-title">Retell analytics · Call Dashboard</h2>
-          <p className="text-xs text-muted mt-1.5">Same charts, order, metrics and breakdowns as Retell&apos;s default Call Dashboard, calculated from your call records.</p>
+          <h2 id="retell-analytics" className="section-title">Call dashboard</h2>
+          <p className="text-[13px] text-zinc-500 mt-1">The same charts and breakdowns as Retell&apos;s Call Dashboard, from your call records.</p>
         </div>
         <Suspense><AnalyticsControls bucket={bucket} compare={compare} breakdown={breakdown ?? ""} breakdowns={[...RETELL_BREAKDOWNS, ...customKeys.map((k) => ({ id: `custom:${k}`, label: `Post Call Extraction: ${humanize(k)}` }))]} /></Suspense>
       </div>
 
       {/* Row 1 — numbers */}
-      <div className="grid sm:grid-cols-3 gap-4">
-        <Big label="Call Counts" value={s.total.toLocaleString()} />
-        <Big label="Call Duration" value={s.duration_s.avg == null ? "0s" : fmtDur(s.duration_s.avg)} />
-        <Big label="Call Latency" value={s.e2e_latency_ms.avg == null ? "0ms" : fmtMs(s.e2e_latency_ms.avg)} />
-      </div>
+      <KpiGrid cols={3}>
+        <Kpi label="Call count" value={s.total.toLocaleString()} sub="calls in this period" />
+        <Kpi label="Average duration" value={s.duration_s.avg == null ? "0s" : fmtDur(s.duration_s.avg)} sub="per call" />
+        <Kpi label="Average latency" value={s.e2e_latency_ms.avg == null ? "0ms" : fmtMs(s.e2e_latency_ms.avg)} sub="end-to-end response time" />
+      </KpiGrid>
 
       {/* Row 2 */}
       <div className="grid lg:grid-cols-3 gap-4">
@@ -120,7 +114,7 @@ export default function RetellAnalytics({ calls, prevCalls, range, prevRange, ti
       <div className="grid lg:grid-cols-3 gap-4">
         <Card title="Voicemail Rate" sub={sub}><Chart kind="line" unit="%" ariaLabel="Voicemail rate" categories={labels} series={over("voicemail_rate", "avg", "--s4")} /></Card>
         <Card title="Average call duration" sub={sub}><Chart kind="line" unit="s" ariaLabel="Average call duration" categories={labels} series={over("duration", "avg", "--s1")} /></Card>
-        <Card title="Average Latency" sub={`${sub} · end-to-end, p50 per call`}><Chart kind="line" unit="ms" ariaLabel="Average latency" categories={labels} series={over("e2e_latency", "avg", "--s2")} /></Card>
+        <Card title="Average Latency" sub={`${sub}, end-to-end p50 per call`}><Chart kind="line" unit="ms" ariaLabel="Average latency" categories={labels} series={over("e2e_latency", "avg", "--s2")} /></Card>
       </div>
 
       {/* Row 6 */}
@@ -138,7 +132,7 @@ export default function RetellAnalytics({ calls, prevCalls, range, prevRange, ti
 
       {/* Other Retell metrics available in its chart builder */}
       <div className="grid lg:grid-cols-3 gap-4">
-        <Card title="Combined cost" sub={`Sum · ${sub.toLowerCase()}`} className="lg:col-span-2">
+        <Card title="Combined cost" sub={`Total, ${sub.toLowerCase()}`} className="lg:col-span-2">
           <Chart kind={breakdown ? "stacked" : "column"} unit="$" labels="none" ariaLabel="Combined cost over time" categories={labels} series={over("cost", "sum")} />
         </Card>
         <Card title="Call Status"><Chart kind="donut" height={300} legendPosition="bottom" ariaLabel="Call status" categories={statusD.categories} series={[{ name: "Calls", data: statusD.data }]} sliceColors={statusD.colors} /></Card>

@@ -1,9 +1,8 @@
 import "server-only";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
-import { cookies } from "next/headers";
 import { supabaseServer } from "./supabase";
-import { effectiveRole, isRole, VIEW_AS_COOKIE, type Role } from "../roles";
+import { normalizeRole, type Role } from "../roles";
 import { SAFE_KEY, type Filters } from "../filters";
 
 const AGENT_ID = /^[A-Za-z0-9_-]{1,80}$/;
@@ -37,12 +36,10 @@ export const getWorkspace = cache(async (slug: string) => {
     .maybeSingle<Workspace & { workspace_members: { role: string }[] | null }>();
   if (!data) notFound();
   const { workspace_members: members, ...ws } = data;
-  const memberRole = members?.[0]?.role;
-  const actualRole: Role = isRole(memberRole) ? memberRole : "client";
-  // `role` drives the UI and honours the "View as" preview (which can only lower access).
-  // Server actions re-check the real role from the database, so the cookie never grants anything.
-  const role = effectiveRole(actualRole, (await cookies()).get(VIEW_AS_COOKIE)?.value);
-  return { db, user, ws: ws as Workspace, role, actualRole };
+  if (!members?.length) notFound();
+  // Every member is an Admin (the creator is stored as "owner" so they can't be removed).
+  const role: Role = normalizeRole(members[0].role);
+  return { db, user, ws: ws as Workspace, role, actualRole: role };
 });
 
 const ANALYTICS_COLUMNS = `call_id, start_ts, end_ts, duration_ms, agent_id, agent_name, agent_version, call_type, direction,

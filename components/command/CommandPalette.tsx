@@ -34,7 +34,6 @@ const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ["/"], label: "Search / jump to" },
   { keys: ["G", "A"], label: "Go to Analytics" },
   { keys: ["G", "C"], label: "Go to Call History" },
-  { keys: ["G", "I"], label: "Go to Insights" },
   { keys: ["G", "R"], label: "Go to Reports" },
   { keys: ["G", "S"], label: "Go to Settings" },
   { keys: ["?"], label: "Show keyboard shortcuts" },
@@ -57,7 +56,7 @@ export default function CommandPalette({ basePath }: { basePath: string }) {
   const path = usePathname();
   const sp = useSearchParams();
   const role = useRole();
-  const { openAskAi, workspaceId } = useApp();
+  const { openAskAi, workspaceId, live } = useApp();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"search" | "shortcuts">("search");
   const [q, setQ] = useState("");
@@ -73,9 +72,9 @@ export default function CommandPalette({ basePath }: { basePath: string }) {
   const filterQs = useCallback(() => {
     const n = new URLSearchParams(sp.toString());
     n.delete("page");
-    if (demo && !n.get("range")) return DEMO_QS;
+    if (demo && !live && !n.get("range")) return DEMO_QS;
     return n.toString();
-  }, [sp, demo]);
+  }, [sp, demo, live]);
 
   const commands = useMemo<Command[]>(() => {
     const go = (href: string) => () => router.push(href);
@@ -86,7 +85,7 @@ export default function CommandPalette({ basePath }: { basePath: string }) {
     }));
 
     const analyticsHref = demo ? "/demo" : `${basePath}/overview`;
-    const onDataPage = [analyticsHref, `${basePath}/calls`, `${basePath}/insights`].includes(path);
+    const onDataPage = [analyticsHref, `${basePath}/calls`].includes(path);
     const target = onDataPage ? path : analyticsHref;
     const withRange = (range: string, extra?: Record<string, string>) => {
       const n = new URLSearchParams(sp.toString());
@@ -100,7 +99,7 @@ export default function CommandPalette({ basePath }: { basePath: string }) {
       hint: sp.get("range") === r.id ? "Current" : undefined,
       run: go(withRange(r.id)),
     }));
-    if (demo) {
+    if (demo && !live) {
       ranges.unshift({ id: "range-demo", group: "Date range", label: "Sample period (Aug 27 – Sep 30, 2026)", icon: I.calendar, run: go(`${target}?${DEMO_QS}`) });
     }
 
@@ -172,7 +171,7 @@ export default function CommandPalette({ basePath }: { basePath: string }) {
       if (k === "g") { gPressedAt = Date.now(); return; }
       if (Date.now() - gPressedAt < 1200) {
         gPressedAt = 0;
-        const label = { a: "Analytics", c: "Call History", i: "Insights", r: "Reports", s: "Settings" }[k];
+        const label = { a: "Analytics", c: "Call History", r: "Reports", s: "Settings" }[k];
         const cmd = label && commands.find((c) => c.id === `go-${label}`);
         if (cmd) { e.preventDefault(); cmd.run(); }
       }
@@ -203,19 +202,19 @@ export default function CommandPalette({ basePath }: { basePath: string }) {
 
   return (
     <div className="fixed inset-0 z-[75] flex items-start justify-center px-4 pt-[12vh]" role="presentation">
-      <div className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px] palette-fade" onClick={close} />
+      <div className="absolute inset-0 bg-zinc-900/25 backdrop-blur-[2px] palette-fade" onClick={close} />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={mode === "search" ? "Command palette" : "Keyboard shortcuts"}
-        className="palette-in relative w-full max-w-[620px] overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-pop"
+        className="palette-in relative w-full max-w-[620px] overflow-hidden rounded-xl border border-zinc-200/70 bg-white shadow-pop"
         onKeyDown={mode === "search" ? onListKey : (e) => { if (e.key === "Escape") close(); }}
         tabIndex={-1}
       >
         {mode === "search" ? (
           <>
-            <div className="flex items-center gap-3 border-b border-slate-100 px-4">
-              <span className="text-slate-400">{I.search}</span>
+            <div className="flex items-center gap-3 border-b border-zinc-100 px-4">
+              <span className="text-zinc-400">{I.search}</span>
               <input
                 ref={inputRef}
                 value={q}
@@ -226,7 +225,7 @@ export default function CommandPalette({ basePath }: { basePath: string }) {
                 aria-activedescendant={results[active] ? `cmd-${results[active].id}` : undefined}
                 role="combobox"
                 aria-expanded="true"
-                className="h-14 flex-1 bg-transparent text-[15px] text-slate-900 placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none"
+                className="h-14 flex-1 bg-transparent text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none focus:outline-none focus-visible:outline-none"
               />
               <kbd className="kbd">Esc</kbd>
             </div>
@@ -236,7 +235,7 @@ export default function CommandPalette({ basePath }: { basePath: string }) {
                 lastGroup = c.group;
                 return (
                   <div key={c.id}>
-                    {header && <div className="px-3 pb-1.5 pt-3 text-xs font-medium text-slate-400 first:pt-1">{header}</div>}
+                    {header && <div className="px-3 pb-1.5 pt-3 text-xs font-medium text-zinc-400 first:pt-1">{header}</div>}
                     <button
                       id={`cmd-${c.id}`}
                       data-index={i}
@@ -245,40 +244,40 @@ export default function CommandPalette({ basePath }: { basePath: string }) {
                       onMouseMove={() => setActive(i)}
                       onClick={() => run(c)}
                       className={cx(
-                        "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm active:!scale-100",
-                        i === active ? "bg-slate-100 text-slate-900" : "text-slate-700"
+                        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm active:!scale-100",
+                        i === active ? "bg-zinc-100 text-zinc-900" : "text-zinc-700"
                       )}
                     >
-                      <span className={cx("grid h-8 w-8 place-items-center rounded-lg border", i === active ? "border-slate-200 bg-white text-slate-900" : "border-slate-100 bg-slate-50 text-slate-500")}>{c.icon}</span>
+                      <span className={cx("grid h-8 w-8 place-items-center rounded-md border", i === active ? "border-zinc-200 bg-white text-zinc-900" : "border-zinc-100 bg-zinc-50 text-zinc-500")}>{c.icon}</span>
                       <span className="min-w-0 flex-1 truncate font-medium">{c.label}</span>
-                      {c.hint && <span className="text-xs text-slate-400">{c.hint}</span>}
+                      {c.hint && <span className="text-xs text-zinc-400">{c.hint}</span>}
                       {c.keys && <span className="flex gap-1">{c.keys.map((k) => <kbd key={k} className="kbd">{k}</kbd>)}</span>}
                     </button>
                   </div>
                 );
               })}
             </div>
-            <div className="flex items-center gap-4 border-t border-slate-100 bg-slate-50/60 px-4 py-2.5 text-xs text-slate-500">
+            <div className="flex items-center gap-4 border-t border-zinc-100 bg-zinc-50/60 px-4 py-2.5 text-xs text-zinc-500">
               <span className="flex items-center gap-1.5"><kbd className="kbd">↑</kbd><kbd className="kbd">↓</kbd> navigate</span>
               <span className="flex items-center gap-1.5"><kbd className="kbd">↵</kbd> open</span>
-              <button onClick={() => setMode("shortcuts")} className="ml-auto flex items-center gap-1.5 hover:text-slate-800"><kbd className="kbd">?</kbd> shortcuts</button>
+              <button onClick={() => setMode("shortcuts")} className="ml-auto flex items-center gap-1.5 hover:text-zinc-800"><kbd className="kbd">?</kbd> shortcuts</button>
             </div>
           </>
         ) : (
           <div className="p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-slate-900">Keyboard shortcuts</h2>
-              <button onClick={close} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700">✕</button>
+              <h2 className="text-base font-semibold text-zinc-900">Keyboard shortcuts</h2>
+              <button onClick={close} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700">✕</button>
             </div>
             <ul className="divide-y divide-slate-100">
               {SHORTCUTS.map((s) => (
-                <li key={s.label} className="flex items-center justify-between py-2.5 text-sm text-slate-700">
+                <li key={s.label} className="flex items-center justify-between py-2.5 text-sm text-zinc-700">
                   {s.label}
                   <span className="flex gap-1">{s.keys.map((k) => <kbd key={k} className="kbd">{k === "Ctrl" ? modKey : k}</kbd>)}</span>
                 </li>
               ))}
             </ul>
-            <button onClick={() => setMode("search")} className="mt-4 text-sm font-medium text-slate-600 hover:text-slate-900">← Back to search</button>
+            <button onClick={() => setMode("search")} className="mt-4 text-sm font-medium text-zinc-600 hover:text-zinc-900">← Back to search</button>
           </div>
         )}
       </div>

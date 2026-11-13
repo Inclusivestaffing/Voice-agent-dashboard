@@ -21,13 +21,13 @@ export default async function WorkspacesPage() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-      <header className="flex items-start justify-between gap-4 border-b border-slate-200 pb-6 mb-8">
+      <header className="flex items-start justify-between gap-4 border-b border-zinc-200 pb-6 mb-8">
         <div>
           <div className="mb-4">
             <InclusiveLogo href="/workspaces" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Workspaces</h1>
-          <p className="text-slate-500 mt-1 text-sm">One workspace per client. Each has its own Retell account, branding, team and reports.</p>
+          <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.025em] text-zinc-900">Workspaces</h1>
+          <p className="text-zinc-500 mt-1 text-sm">One workspace per client. Each has its own Retell account, branding, team and reports.</p>
         </div>
         <form action={signOut}>
           <button className="text-xs text-dim hover:text-ink">Sign out · {user.email}</button>
@@ -36,15 +36,15 @@ export default async function WorkspacesPage() {
 
       {list.length > 0 && (
         <section className="grid sm:grid-cols-2 gap-4 mb-12">
-          {list.map(({ ws, role }) => (
-            <Link key={ws.id} href={`/w/${ws.slug}/overview`} className="group bg-surface border border-line p-5 hover:border-ink transition flex items-center gap-4 rounded-2xl">
+          {list.map(({ ws }) => (
+            <Link key={ws.id} href={`/w/${ws.slug}/overview`} className="group bg-surface border border-line p-5 hover:border-ink transition flex items-center gap-4 rounded-xl">
               {ws.logo_url
                 // eslint-disable-next-line @next/next/no-img-element
                 ? <img src={ws.logo_url} alt="" className="h-10 w-auto max-w-[80px] object-contain" />
                 : <div className="h-10 w-10 grid place-items-center bg-ink text-white font-semibold">{ws.name.slice(0, 1).toUpperCase()}</div>}
               <div className="min-w-0 flex-1">
                 <div className="font-medium truncate">{ws.name}</div>
-                <div className="text-xs text-dim mt-0.5">{(counts.get(ws.id) ?? 0).toLocaleString()} calls · {role}</div>
+                <div className="text-xs text-dim mt-0.5">{(counts.get(ws.id) ?? 0).toLocaleString()} calls · Admin</div>
               </div>
               <span className="text-muted group-hover:text-ink">→</span>
             </Link>
@@ -52,7 +52,7 @@ export default async function WorkspacesPage() {
         </section>
       )}
 
-      <section className="bg-surface border border-line p-6 rounded-2xl">
+      <section className="bg-surface border border-line p-6 rounded-xl">
         <h2 className="section-title mb-1">Create a workspace</h2>
         <p className="text-sm text-dim mb-5">Paste the client&apos;s Retell API key (Retell dashboard → Settings → API Keys). We&apos;ll import their calls and start analyzing them right away.</p>
         <CreateWorkspaceForm />

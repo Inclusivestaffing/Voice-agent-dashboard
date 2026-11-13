@@ -19,20 +19,18 @@ export default async function ReportsPage({ params }: { params: Promise<{ slug: 
     <>
       <div className="flex items-end justify-between gap-4 flex-wrap mb-4">
         <div>
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{ws.name} · Voice Analytics</div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">Client Reports</h1>
-          <p className="text-sm text-slate-500 mt-1">Branded, client-ready reports for any period. Numbers come straight from the call data; Claude writes the plain-English explanation.</p>
+          <h1 className="text-2xl leading-tight font-semibold tracking-[-0.022em] text-zinc-900">Reports</h1>
+          <p className="text-sm text-zinc-500 mt-1.5 max-w-2xl">Branded, client-ready reports for any period. Numbers come straight from the call data; Claude writes the plain-English explanation.</p>
         </div>
       </div>
 
-
       {canEdit(role) && (
         <Card title="Generate a report" className="mb-6">
-          <ReportForm slug={slug} agents={options.agents} />
+          <ReportForm slug={slug} agents={options.agents} today={new Intl.DateTimeFormat("en-CA", { timeZone: ws.timezone }).format(new Date())} />
         </Card>
       )}
       {(reports ?? []).length === 0 ? <Empty title="No reports yet" /> : (
-        <div className="border border-line bg-surface divide-y divide-line rounded-2xl overflow-hidden">
+        <div className="border border-line bg-surface divide-y divide-line rounded-xl overflow-hidden">
           {(reports ?? []).map((r) => (
             <Link key={r.id} href={`/w/${slug}/reports/${r.id}`} className="flex items-center justify-between gap-4 p-4 hover:bg-surface-2">
               <div className="min-w-0">

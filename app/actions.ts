@@ -15,17 +15,20 @@ import { METRICS, DIMENSIONS } from "@/lib/metrics/aggregate";
 import { ALERT_METRICS } from "@/lib/alerts";
 import { SAFE_KEY } from "@/lib/filters";
 
-import { RANK, ROLES, ROLE_LABEL, type Role } from "@/lib/roles";
+import { normalizeRole, type Role } from "@/lib/roles";
 
 /** Every action re-checks membership server-side; never trust the client for workspace or role. */
-async function assertRole(workspaceId: string, min: Role) {
+// Every member is an Admin; "owner" (the creator) is only needed to protect the creator from removal.
+async function assertRole(workspaceId: string, min: "client" | "admin" | "owner") {
   if (!UUID.test(workspaceId)) throw new Error("Unknown workspace.");
   const db = await supabaseServer();
   const { data: { user } } = await db.auth.getUser();
   if (!user) throw new Error("Not signed in");
   const { data } = await db.from("workspace_members").select("role").eq("workspace_id", workspaceId).eq("user_id", user.id).maybeSingle();
-  if (!data || RANK[data.role as Role] < RANK[min]) throw new Error("You don't have permission to do that in this workspace.");
-  return { user, role: data.role as Role };
+  if (!data) throw new Error("You don't have permission to do that in this workspace.");
+  const role: Role = normalizeRole(data.role);
+  if (min === "owner" && role !== "owner") throw new Error("You don't have permission to do that in this workspace.");
+  return { user, role };
 }
 
 function slugify(s: string) {
@@ -158,24 +161,21 @@ const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
 
 export async function inviteMember(_: ActionState, form: FormData): Promise<ActionState> {
   const workspaceId = str(form, "workspace_id", 40);
-  const { user: inviter, role: inviterRole } = await assertRole(workspaceId, "admin");
+  const { user: inviter } = await assertRole(workspaceId, "admin");
   const email = str(form, "email", 254).toLowerCase();
-  const role = str(form, "role", 10) as Role;
+  const role = "admin"; // one role for everyone
   if (!EMAIL.test(email)) return { error: "Enter a valid email." };
-  if (!ROLES.includes(role)) return { error: "Unknown role." };
-  // Admins can't create owners (no privilege escalation through invites).
-  if (role === "owner" && inviterRole !== "owner") return { error: "Only owners can invite another owner." };
   const admin = supabaseAdmin();
   const { error } = await admin.from("workspace_invites").upsert({ workspace_id: workspaceId, email, role, invited_by: inviter.id, accepted_at: null }, { onConflict: "workspace_id,email" });
   if (error) return { error: "Couldn't create the invite." };
   // Sends a Supabase invite email; existing users just get access next time they sign in.
   await admin.auth.admin.inviteUserByEmail(email, { redirectTo: `${await appOrigin()}/auth/callback?next=/workspaces` }).catch(() => null);
   revalidatePath("/w", "layout");
-  return { ok: true, message: `Invited ${email} as ${ROLE_LABEL[role]}. They get access once they sign in with a verified email.` };
+  return { ok: true, message: `Invited ${email} as Admin. They get access once they sign in with a verified email.` };
 }
 
 export async function removeMember(workspaceId: string, userId: string) {
-  await assertRole(workspaceId, "owner");
+  await assertRole(workspaceId, "admin");
   if (!UUID.test(userId)) throw new Error("Unknown member.");
   await supabaseAdmin().from("workspace_members").delete().eq("workspace_id", workspaceId).eq("user_id", userId).neq("role", "owner");
   revalidatePath("/w", "layout");

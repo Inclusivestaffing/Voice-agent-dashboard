@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import CallDrawer from "./CallDrawer";
 import { OutcomePill, RootCauseTag, SentimentText, cx, fmtDur, fmtMoney, fmtMs, humanize } from "../ui";
 
 export interface CallHistoryRow {
@@ -61,9 +63,26 @@ function StatusDot({ status }: { status: string | null }) {
   return <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><span className={cx("w-2 h-2 rounded-full", color)} />{humanize(status ?? "—")}</span>;
 }
 
-export default function CallHistoryTable({ rows, timezone, detailBase, navQuery, sortBase, sort, dir }: {
+export default function CallHistoryTable({ rows, timezone, detailBase, navQuery, sortBase, sort, dir, drawerApi }: {
   rows: CallHistoryRow[]; timezone: string; detailBase: string; navQuery: string; sortBase: string; sort: string; dir: "asc" | "desc";
+  /** Endpoint the slide-over loads call details from, e.g. "/api/demo/calls". */
+  drawerApi: string;
 }) {
+  // The open call lives in the URL (?call=…) so it survives refresh and can be shared. Changing it
+  // uses the History API directly, which Next keeps in sync without a server round trip.
+  const sp = useSearchParams();
+  const openId = sp.get("call");
+  const setCall = useCallback((id: string | null, mode: "push" | "replace" = "push") => {
+    const u = new URL(window.location.href);
+    if (id) u.searchParams.set("call", id); else u.searchParams.delete("call");
+    window.history[mode === "push" ? "pushState" : "replaceState"](null, "", u.toString());
+  }, []);
+  const openCall = (e: React.MouseEvent, id: string) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return; // new tab: full page
+    e.preventDefault();
+    setCall(id, openId ? "replace" : "push");
+  };
+  const ids = rows.map((r) => r.call_id);
   const [visible, setVisible] = useState<string[]>(() => COLUMNS.filter((c) => c.defaultOn).map((c) => c.id));
   const [open, setOpen] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
@@ -97,15 +116,15 @@ export default function CallHistoryTable({ rows, timezone, detailBase, navQuery,
   return (
     <>
       <div className="flex justify-end mb-2.5 relative" ref={popRef}>
-        <button onClick={() => setOpen(!open)} aria-expanded={open} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 transition">
-          <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <button onClick={() => setOpen(!open)} aria-expanded={open} className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-2xs hover:bg-zinc-50 transition">
+          <svg className="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Customize fields
         </button>
         {open && (
-          <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-slate-200 rounded-2xl shadow-pop p-4 w-72 max-h-[420px] overflow-y-auto">
+          <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-zinc-200 rounded-xl shadow-pop p-4 w-72 max-h-[420px] overflow-y-auto">
             {(["Retell", "AI analysis"] as const).map((g) => (
               <fieldset key={g} className="mb-3">
-                <legend className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">{g === "Retell" ? "Retell fields" : "AI analysis"}</legend>
+                <legend className="text-[11px] font-semibold text-zinc-500 mb-2">{g === "Retell" ? "Retell fields" : "AI analysis"}</legend>
                 {COLUMNS.filter((c) => c.group === g).map((c) => (
                   <label key={c.id} className="flex items-center gap-2 py-0.5 text-[13px] cursor-pointer">
                     <input type="checkbox" checked={visible.includes(c.id)} onChange={() => toggle(c.id)} className="accent-ink" />{c.label}
@@ -117,23 +136,23 @@ export default function CallHistoryTable({ rows, timezone, detailBase, navQuery,
         )}
       </div>
 
-      <div className="hidden md:block overflow-x-auto border border-slate-200/70 rounded-2xl bg-white shadow-card">
+      <div className="hidden md:block overflow-x-auto border border-zinc-200/70 rounded-xl bg-white shadow-card">
         <table className="w-full text-[13px]">
-          <thead className="bg-slate-50/90">
+          <thead className="bg-zinc-50/90">
             <tr>
               {cols.map((c) => (
-                <th key={c.id} scope="col" className={cx("text-left px-3.5 py-3 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap", c.align === "right" && "text-right")}>
-                  {c.sort ? <Link href={sortHref(c.sort)} className="hover:text-slate-900 transition">{c.label}{sort === c.sort ? (dir === "asc" ? " ↑" : " ↓") : ""}</Link> : c.label}
+                <th key={c.id} scope="col" className={cx("text-left px-3.5 py-3 border-b border-zinc-200 text-xs font-semibold text-zinc-500 whitespace-nowrap", c.align === "right" && "text-right")}>
+                  {c.sort ? <Link href={sortHref(c.sort)} className="hover:text-zinc-900 transition">{c.label}{sort === c.sort ? (dir === "asc" ? " ↑" : " ↓") : ""}</Link> : c.label}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.call_id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors align-middle relative">
+              <tr key={r.call_id} aria-selected={openId === r.call_id} className={cx("border-b border-zinc-100 hover:bg-zinc-50/80 transition-colors align-middle relative", openId === r.call_id && "bg-zinc-50")}>
                 {cols.map((c, i) => (
-                  <td key={c.id} className={cx("px-3.5 py-3 text-slate-700", c.align === "right" && "text-right")}>
-                    {i === 0 ? <Link href={href(r.call_id)} className="font-medium text-slate-900 hover:underline after:absolute after:inset-0">{c.render(r, timezone)}</Link> : c.render(r, timezone)}
+                  <td key={c.id} className={cx("px-3.5 py-3 text-zinc-700", c.align === "right" && "text-right")}>
+                    {i === 0 ? <Link href={href(r.call_id)} onClick={(e) => openCall(e, r.call_id)} className="font-medium text-zinc-900 after:absolute after:inset-0 after:cursor-pointer">{c.render(r, timezone)}</Link> : c.render(r, timezone)}
                   </td>
                 ))}
               </tr>
@@ -142,9 +161,9 @@ export default function CallHistoryTable({ rows, timezone, detailBase, navQuery,
         </table>
       </div>
 
-      <div className="md:hidden border border-slate-200/70 rounded-2xl bg-white divide-y divide-slate-100 shadow-card overflow-hidden">
+      <div className="md:hidden border border-zinc-200/70 rounded-xl bg-white divide-y divide-zinc-100 shadow-card overflow-hidden">
         {rows.map((r) => (
-          <Link key={r.call_id} href={href(r.call_id)} className="flex justify-between gap-3 p-4 active:bg-surface-2">
+          <Link key={r.call_id} href={href(r.call_id)} onClick={(e) => openCall(e, r.call_id)} className="flex justify-between gap-3 p-4 active:bg-surface-2">
             <div className="min-w-0">
               <div className="flex gap-2 items-center flex-wrap"><OutcomePill outcome={r.outcome} /><StatusDot status={r.call_status} /></div>
               <div className="font-medium mt-1.5 truncate">{r.intent || humanize(r.disconnection_reason ?? "")}</div>
@@ -157,6 +176,17 @@ export default function CallHistoryTable({ rows, timezone, detailBase, navQuery,
           </Link>
         ))}
       </div>
+      {openId && (
+        <CallDrawer
+          callId={openId}
+          apiBase={drawerApi}
+          fullHref={href}
+          timezone={timezone}
+          ids={ids}
+          onNavigate={(id) => setCall(id, "replace")}
+          onClose={() => setCall(null, "replace")}
+        />
+      )}
     </>
   );
 }

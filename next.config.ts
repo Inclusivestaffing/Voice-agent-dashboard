@@ -57,9 +57,12 @@ const nextConfig: NextConfig = {
       {
         // Straight to the right place in one hop (no second redirect to add the demo's date range).
         source: "/",
-        destination: process.env.NEXT_PUBLIC_SUPABASE_URL ? "/workspaces" : `/demo?${DEMO_QS}`,
+        destination: process.env.NEXT_PUBLIC_SUPABASE_URL ? "/workspaces" : "/demo",
         permanent: false,
       },
+      // Insights was removed; old links land on Analytics.
+      { source: "/demo/insights", destination: `/demo?${DEMO_QS}`, permanent: false },
+      { source: "/w/:slug/insights", destination: "/w/:slug/overview", permanent: false },
     ];
   },
   async headers() {

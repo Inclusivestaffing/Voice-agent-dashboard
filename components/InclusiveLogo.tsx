@@ -6,7 +6,7 @@ export function InclusiveLogo({ className = "h-9 w-auto", href }: { className?: 
     <img
       src="/inclusive-logo.png"
       alt="Inclusive Staffing"
-      className={`${className} object-contain shrink-0`}
+      className={`${className} object-contain shrink-0 mix-blend-multiply`}
     />
   );
 

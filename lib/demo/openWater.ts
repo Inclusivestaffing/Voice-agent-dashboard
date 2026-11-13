@@ -261,7 +261,7 @@ export function filterDemo(calls: DemoCall[], f: Filters): DemoCall[] {
     if (f.callId && c.call_id !== f.callId) return false;
     if (f.transferTo && !(c.transfer_destination ?? "").includes(f.transferTo)) return false;
     if (f.batchCallId && c.batch_call_id !== f.batchCallId) return false;
-    if (f.q && !demoTranscriptText(c.call_id).toLowerCase().includes(f.q.toLowerCase())) return false;
+    if (f.q && !(demoTranscriptText(c.call_id) || c.call_summary || "").toLowerCase().includes(f.q.toLowerCase())) return false;
     for (const [k, v] of Object.entries(f.custom)) if (String(c.custom_analysis?.[k] ?? "") !== v) return false;
     for (const [k, v] of Object.entries(f.metadata)) if (String(c.metadata?.[k] ?? "") !== v) return false;
     for (const [k, v] of Object.entries(f.dynVars)) if (String(c.dynamic_variables?.[k] ?? "") !== v) return false;

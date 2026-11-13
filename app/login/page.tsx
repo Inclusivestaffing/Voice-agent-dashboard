@@ -48,20 +48,20 @@ function LoginForm() {
   }
 
   return (
-    <form onSubmit={(e) => submit(e)} className="w-full max-w-sm bg-white rounded-2xl border border-slate-200 p-8 shadow-card">
+    <form onSubmit={(e) => submit(e)} className="w-full max-w-sm bg-white rounded-xl border border-zinc-200 p-8 shadow-card">
       <div className="mb-5">
         <InclusiveLogo href="/login" />
       </div>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Sign in</h1>
+      <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.025em] text-zinc-900">Sign in</h1>
       <p className="text-sm text-dim mt-1">See how your AI voice agents are performing.</p>
       <label className="block mt-6 eyebrow" htmlFor="email">Email</label>
       <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-        className="mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-xl" autoComplete="email" />
+        className="mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-lg" autoComplete="email" />
       {mode === "password" && (
         <>
           <label className="block mt-4 eyebrow" htmlFor="pw">Password</label>
           <input id="pw" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)}
-            className="mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-xl" autoComplete="current-password" />
+            className="mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-lg" autoComplete="current-password" />
         </>
       )}
       {msg && <p className={`mt-4 text-sm ${msg.tone === "ok" ? "text-good" : "text-bad"}`} role="status">{msg.text}</p>}

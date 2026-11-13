@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { demoCalls, filterDemo, demoTranscriptText, DEMO_WORKSPACE, DEMO_BH } from "@/lib/demo/openWater";
+import { filterDemo, demoTranscriptText } from "@/lib/demo/openWater";
+import { getSource } from "@/lib/source";
 import { snapshotFromCalls } from "@/lib/reports/snapshot";
 import { ruleAnswer, askContext, ASK_MODEL } from "@/lib/ai/ask";
 import { chatTitle, cleanHistory, SUGGESTED_QUESTIONS } from "@/lib/ai/askShared";
@@ -19,18 +20,17 @@ export async function POST(req: NextRequest) {
 
     const cleanedHistory = cleanHistory(history);
 
-    // Build snapshot for demo or workspace
-    // (In demo mode, we use the 44 Open Water calls with actual diagnosis data)
-    const f = parseFilters(filters ?? {}, DEMO_WORKSPACE.timezone);
-    const all = demoCalls();
-    const calls = filterDemo(all, f);
-    const transcripts = new Map(calls.map((c) => [c.call_id, demoTranscriptText(c.call_id)]));
+    // Sample data, or the Retell account connected in Settings (live calls; summaries stand in for transcripts).
+    const src = await getSource();
+    const f = parseFilters(filters ?? {}, src.timezone);
+    const calls = filterDemo(await src.calls(f.from, f.to), f);
+    const transcripts = new Map(calls.map((c) => [c.call_id, src.live ? c.call_summary ?? "" : demoTranscriptText(c.call_id)]));
     const snapshot = snapshotFromCalls({
       calls,
       prev: [],
       transcripts,
-      workspace: DEMO_WORKSPACE,
-      businessHours: DEMO_BH,
+      workspace: { name: src.name, logo_url: null, brand_primary: "#facc15", agent_name: src.agentName, timezone: src.timezone },
+      businessHours: src.businessHours,
       period: { from: f.from, to: f.to },
     });
 

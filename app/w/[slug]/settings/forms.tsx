@@ -5,7 +5,7 @@ import { connectRetell, updateSettings, inviteMember, saveAlert, removeMember, d
 import type { Workspace } from "@/lib/db/queries";
 import { Button } from "@/components/ui";
 
-const input = "mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-xl";
+const input = "mt-1.5 w-full border border-line-strong bg-surface px-3 py-2 text-sm rounded-lg";
 const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const TIMEZONES = ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage",
   "Pacific/Honolulu", "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Singapore", "Australia/Sydney", "UTC"];
@@ -40,7 +40,7 @@ export function SettingsForm({ ws }: { ws: Workspace }) {
         <label className="block"><span className="eyebrow">AI agent display name</span><input name="agent_display_name" defaultValue={ws.agent_display_name ?? ""} className={input} /></label>
         <label className="block"><span className="eyebrow">Timezone</span>
           <select name="timezone" defaultValue={ws.timezone} className={input}>{[...new Set([ws.timezone, ...TIMEZONES])].map((t) => <option key={t}>{t}</option>)}</select></label>
-        <label className="block"><span className="eyebrow">Report accent color</span><input name="brand_primary" type="color" defaultValue={ws.brand_primary} className="mt-1.5 h-10 w-full border border-line-strong rounded-xl" /></label>
+        <label className="block"><span className="eyebrow">Report accent color</span><input name="brand_primary" type="color" defaultValue={ws.brand_primary} className="mt-1.5 h-10 w-full border border-line-strong rounded-lg" /></label>
         <label className="block sm:col-span-2"><span className="eyebrow">Logo (shown on reports)</span><input name="logo" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1.5 block text-sm" /></label>
       </div>
       <label className="block"><span className="eyebrow">What counts as a successful call?</span>
@@ -54,9 +54,9 @@ export function SettingsForm({ ws }: { ws: Workspace }) {
             return (
               <div key={d} className="flex items-center gap-2 text-sm">
                 <label className="w-16 flex items-center gap-1.5"><input type="checkbox" name={`bh_${d}_open`} defaultChecked={!!v} />{d}</label>
-                <input type="time" name={`bh_${d}_start`} defaultValue={v ? toHM(v[0]) : "08:30"} className="border border-line-strong bg-surface px-2 py-1 text-xs rounded-xl" />
+                <input type="time" name={`bh_${d}_start`} defaultValue={v ? toHM(v[0]) : "08:30"} className="border border-line-strong bg-surface px-2 py-1 text-xs rounded-lg" />
                 <span className="text-muted">–</span>
-                <input type="time" name={`bh_${d}_end`} defaultValue={v ? toHM(v[1]) : "17:30"} className="border border-line-strong bg-surface px-2 py-1 text-xs rounded-xl" />
+                <input type="time" name={`bh_${d}_end`} defaultValue={v ? toHM(v[1]) : "17:30"} className="border border-line-strong bg-surface px-2 py-1 text-xs rounded-lg" />
               </div>
             );
           })}
@@ -74,8 +74,6 @@ export function InviteForm({ workspaceId }: { workspaceId: string }) {
     <form action={action} className="flex flex-wrap gap-2 items-end">
       <input type="hidden" name="workspace_id" value={workspaceId} />
       <label className="block flex-1 min-w-[200px]"><span className="eyebrow">Invite by email</span><input name="email" type="email" required className={input} placeholder="client@business.com" /></label>
-      <label className="block"><span className="eyebrow">Role</span>
-        <select name="role" className={input} defaultValue="client"><option value="client">Client</option><option value="user">User</option><option value="admin">Admin</option><option value="owner">Owner</option></select></label>
       <Button type="submit" disabled={pending}>Invite</Button>
       <div className="w-full"><Msg s={state} /></div>
     </form>
@@ -87,7 +85,7 @@ export function MemberRow({ workspaceId, userId, email, role, isSelf, canRemove 
   return (
     <li className="flex items-center justify-between py-2 text-sm gap-3">
       <span className="truncate">{email}{isSelf && <span className="text-xs text-muted ml-1.5">YOU</span>}</span>
-      <span className="flex items-center gap-3"><span className="text-xs text-dim">{role}</span>
+      <span className="flex items-center gap-3"><span className="text-xs text-dim">Admin</span>
         {canRemove && !isSelf && role !== "owner" && <button disabled={pending} onClick={() => start(() => removeMember(workspaceId, userId))} className="text-xs text-muted hover:text-bad">Remove</button>}
       </span>
     </li>
@@ -130,7 +128,7 @@ export function CopyField({ value }: { value: string }) {
   const [done, setDone] = useState(false);
   return (
     <div className="flex">
-      <input readOnly value={value} className="flex-1 border border-line-strong bg-surface-2 px-3 py-2 text-xs min-w-0 rounded-xl" onFocus={(e) => e.target.select()} />
+      <input readOnly value={value} className="flex-1 border border-line-strong bg-surface-2 px-3 py-2 text-xs min-w-0 rounded-lg" onFocus={(e) => e.target.select()} />
       <button type="button" onClick={async () => { await navigator.clipboard.writeText(value); setDone(true); setTimeout(() => setDone(false), 1500); }}
         className="bg-ink text-bg px-3 text-xs font-medium">{done ? "Copied" : "Copy"}</button>
     </div>

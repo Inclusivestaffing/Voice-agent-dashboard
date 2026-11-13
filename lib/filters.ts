@@ -1,4 +1,4 @@
-// One filter model shared by the overview, calls, insights and report builder.
+// One filter model shared by analytics, call history and the report builder.
 // Filters live in the URL query string so views are linkable and savable.
 
 export interface Filters {

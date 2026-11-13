@@ -1,18 +1,18 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
-import { type Role, VIEW_AS_COOKIE, isRole, canEdit, canSeeInsights } from "@/lib/roles";
+import { createContext, useContext, useState } from "react";
+import type { Role } from "@/lib/roles";
 import ChatView from "@/components/ai/ChatView";
 
 interface AppContextType {
   role: Role;
-  setRole: (role: Role) => void;
   isAskAiOpen: boolean;
   openAskAi: (question?: string) => void;
   closeAskAi: () => void;
   canEdit: boolean;
-  canSeeInsights: boolean;
   workspaceId: string;
+  /** The /demo app is showing a connected Retell account instead of sample data. */
+  live: boolean;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -21,35 +21,15 @@ export function AppProvider({
   children,
   initialRole = "admin",
   workspaceId = "demo",
+  live = false,
 }: {
   children: React.ReactNode;
   initialRole?: Role;
   workspaceId?: string;
+  live?: boolean;
 }) {
-  const [role, setRoleState] = useState<Role>(initialRole);
   const [isAskAiOpen, setIsAskAiOpen] = useState(false);
   const [initialQuestion, setInitialQuestion] = useState<string | null>(null);
-
-  // Sync role from cookie on mount
-  useEffect(() => {
-    try {
-      const match = document.cookie.match(new RegExp(`(^| )${VIEW_AS_COOKIE}=([^;]+)`));
-      if (match && isRole(match[2])) {
-        setRoleState(match[2]);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
-
-  const setRole = (newRole: Role) => {
-    setRoleState(newRole);
-    try {
-      document.cookie = `${VIEW_AS_COOKIE}=${newRole}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const openAskAi = (question?: string) => {
     if (question) setInitialQuestion(question);
@@ -62,44 +42,18 @@ export function AppProvider({
   };
 
   return (
-    <AppContext.Provider
-      value={{
-        role,
-        setRole,
-        isAskAiOpen,
-        openAskAi,
-        closeAskAi,
-        canEdit: canEdit(role),
-        canSeeInsights: canSeeInsights(role),
-        workspaceId,
-      }}
-    >
+    <AppContext.Provider value={{ role: initialRole, isAskAiOpen, openAskAi, closeAskAi, canEdit: true, workspaceId, live }}>
       {children}
-      <ChatView
-        isOpen={isAskAiOpen}
-        onClose={closeAskAi}
-        workspaceId={workspaceId}
-        initialQuestion={initialQuestion}
-      />
+      <ChatView isOpen={isAskAiOpen} onClose={closeAskAi} workspaceId={workspaceId} initialQuestion={initialQuestion} />
     </AppContext.Provider>
   );
 }
 
-export function useApp() {
+export function useApp(): AppContextType {
   const ctx = useContext(AppContext);
   if (!ctx) {
     // Graceful fallback for components used outside AppProvider
-    return {
-      role: "admin" as Role,
-      setRole: () => {},
-      isAskAiOpen: false,
-      openAskAi: () => {},
-      closeAskAi: () => {},
-      canEdit: true,
-      canSeeInsights: true,
-      workspaceId: "demo",
-    };
+    return { role: "admin", isAskAiOpen: false, openAskAi: () => {}, closeAskAi: () => {}, canEdit: true, workspaceId: "demo", live: false };
   }
   return ctx;
 }
-

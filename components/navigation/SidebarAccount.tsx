@@ -1,73 +1,28 @@
-"use client";
-
 import Link from "next/link";
-import { useApp } from "@/components/context/AppContext";
-import { ROLE_LABEL } from "@/lib/roles";
 import { cx } from "@/components/ui";
 
-interface SidebarAccountProps {
-  email?: string;
-  name?: string;
-  basePath?: string;
-  className?: string;
+function initials(s: string) {
+  const parts = s.replace(/@.*/, "").split(/[\s._-]+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "A") + (parts[1]?.[0] ?? "")).toUpperCase();
 }
 
-export default function SidebarAccount({
-  email = "admin@inclusivestaffing.com",
-  name = "Inclusive Staffing",
-  basePath = "/demo",
-  className,
-}: SidebarAccountProps) {
-  const { role, openAskAi } = useApp();
-  const settingsHref = `${basePath}/settings`;
-
+/** Sidebar footer: the signed-in account (everyone is an Admin). Opens settings. */
+export default function SidebarAccount({ email, name, basePath, className }: {
+  email: string; name: string; basePath: string; className?: string;
+}) {
   return (
-    <div className={cx("space-y-2.5 pt-3 border-t border-slate-200/80", className)}>
-      {/* Ask AI Sidebar Button */}
-      <button
-        type="button"
-        onClick={() => openAskAi()}
-        className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold rounded-xl bg-purple-50 text-purple-900 hover:bg-purple-100/80 border border-purple-200/80 transition shadow-xs group"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-base text-purple-600 group-hover:scale-110 transition-transform">✨</span>
-          <span>Ask AI Analyst</span>
-        </div>
-        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-purple-200/60 text-purple-800">
-          Chat
-        </span>
-      </button>
-
-      {/* Clean Account Profile Card (Clicking goes to Settings where controls live) */}
-      <Link
-        href={settingsHref}
-        className="w-full flex items-center gap-2.5 p-2.5 rounded-2xl hover:bg-slate-100/80 border border-transparent hover:border-slate-200 transition group text-left"
-        title="Manage account & role controls in Settings"
-      >
-        <div className="h-8 w-8 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
-          IS
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-slate-900 truncate group-hover:text-slate-950">
-              {name}
-            </span>
-            <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded-md bg-slate-100 border border-slate-200 text-slate-600">
-              {ROLE_LABEL[role]}
-            </span>
-          </div>
-          <div className="text-[11px] text-slate-400 truncate">{email}</div>
-        </div>
-        <svg
-          className="w-4 h-4 text-slate-400 group-hover:text-slate-700 transition shrink-0"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="m9 18 6-6-6-6" />
-        </svg>
-      </Link>
-    </div>
+    <Link
+      href={`${basePath}/settings`}
+      className={cx("group w-full flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-zinc-200/50", className)}
+      title="Account and workspace settings"
+    >
+      <span className="h-8 w-8 rounded-full bg-white border border-zinc-200 text-zinc-700 font-semibold text-[11px] grid place-items-center shrink-0 shadow-[0_1px_1px_rgb(24_24_27/0.04)]">
+        {initials(name)}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[13px] font-medium text-zinc-900 truncate">{name}</span>
+        <span className="block text-[12px] text-zinc-500 truncate" title={email}>Admin</span>
+      </span>
+    </Link>
   );
 }

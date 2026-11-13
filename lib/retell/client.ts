@@ -14,7 +14,9 @@ export async function getRetellKey(workspaceId: string): Promise<string> {
 }
 
 export function retellClient(apiKey: string) {
-  return new Retell({ apiKey, maxRetries: 3, timeout: 60_000 });
+  // RETELL_BASE_URL is only for local testing against a mock server; production always uses Retell's API.
+  const baseURL = process.env.NODE_ENV !== "production" ? process.env.RETELL_BASE_URL : undefined;
+  return new Retell({ apiKey, maxRetries: 3, timeout: 60_000, ...(baseURL ? { baseURL } : {}) });
 }
 
 export async function retellForWorkspace(workspaceId: string) {

@@ -30,7 +30,7 @@ export default function Toaster() {
   return (
     <div aria-live="polite" role="status" className="pointer-events-none fixed inset-x-0 bottom-6 z-[80] flex flex-col items-center gap-2 px-4">
       {items.map((t) => (
-        <div key={t.id} className="toast-in pointer-events-auto flex items-center gap-2.5 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-pop">
+        <div key={t.id} className="toast-in pointer-events-auto flex items-center gap-2.5 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-pop">
           {t.tone === "error"
             ? <svg className="h-4 w-4 text-rose-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
             : <svg className="h-4 w-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>}
