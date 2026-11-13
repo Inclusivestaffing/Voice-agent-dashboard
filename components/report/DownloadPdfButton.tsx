@@ -13,11 +13,11 @@ export default function DownloadPdfButton({
 
   function handleDownload() {
     setDownloading(true);
-    // Short delay to ensure any open UI state or tooltips settle before print dialog
+    // Allow SVG charts and print layouts to fully settle
     setTimeout(() => {
       window.print();
       setDownloading(false);
-    }, 150);
+    }, 300);
   }
 
   return (
@@ -49,3 +49,4 @@ export default function DownloadPdfButton({
     </button>
   );
 }
+

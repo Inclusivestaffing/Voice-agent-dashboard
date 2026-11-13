@@ -41,7 +41,7 @@ export default async function ReportPage({ params }: { params: Promise<{ slug: s
       {narrative?._unverified_numbers?.length ? (
         <p className="mb-4 bg-warn-bg text-warn text-xs px-3 py-2 rounded-lg no-print print:hidden">Check before sending: the summary mentions numbers we couldn&apos;t match to the data ({narrative._unverified_numbers.join(", ")}).</p>
       ) : null}
-      <div className="border border-line -mx-4 sm:mx-0 rounded-xl overflow-hidden">
+      <div className="border border-line -mx-4 sm:mx-0 rounded-xl overflow-hidden print:border-none print:overflow-visible print:mx-0 print:rounded-none">
         <ReportView snap={r.snapshot as ReportSnapshot} narrative={narrative} />
       </div>
     </>

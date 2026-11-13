@@ -33,7 +33,7 @@ export default async function DemoReportView({ searchParams }: { searchParams: P
         </div>
       </div>
       {snap.summary.total === 0 ? <Empty title="No calls in that period, so there's nothing to report." /> : (
-        <div className="border border-line -mx-4 sm:mx-0 rounded-xl overflow-hidden">
+        <div className="border border-line -mx-4 sm:mx-0 rounded-xl overflow-hidden print:border-none print:overflow-visible print:mx-0 print:rounded-none">
           <ReportView snap={snap} narrative={ruleNarrative(snap)} />
         </div>
       )}

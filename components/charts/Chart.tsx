@@ -43,6 +43,8 @@ export interface ChartProps {
   onSelect?: (category: string, seriesName: string) => void;
   /** Hover toolbar: expand, download PNG, download CSV (off inside the expanded view). */
   toolbar?: boolean;
+  /** Force immediate rendering without waiting for IntersectionObserver (essential for reports & PDF print). */
+  forceVisible?: boolean;
 }
 
 const SLOTS = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6", "--s7", "--s8"];
@@ -112,11 +114,22 @@ export function formatValue(v: number | null | undefined, unit?: string): string
 }
 
 export default function Chart(props: ChartProps) {
-  const { kind, categories, series, unit, height = 260, labels = "auto", sliceColors, ariaLabel, legendPosition = "right", onSelect, toolbar = true } = props;
+  const { kind, categories, series, unit, height = 260, labels = "auto", sliceColors, ariaLabel, legendPosition = "right", onSelect, toolbar = true, forceVisible = false } = props;
   const ec = useRef<ReactEChartsCore>(null);
   const [expanded, setExpanded] = useState(false);
+  const [isPrint, setIsPrint] = useState(false);
   const t = useTokens();
-  const { ref, visible } = useNearViewport<HTMLDivElement>();
+  const { ref, visible: nearViewport } = useNearViewport<HTMLDivElement>();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onBefore = () => setIsPrint(true);
+    window.addEventListener("beforeprint", onBefore);
+    if (window.matchMedia?.("print").matches) setIsPrint(true);
+    return () => window.removeEventListener("beforeprint", onBefore);
+  }, []);
+
+  const visible = forceVisible || isPrint || nearViewport;
   const option = useMemo(() => {
     if (!t["--text"]) return null;
     // Short, quiet motion: marks grow in 300 ms on first draw; updates (filters) morph in 200 ms.
@@ -232,11 +245,13 @@ export default function Chart(props: ChartProps) {
   return (
     <div ref={ref} className="chart-enter group/chart relative">
       {toolbar && (
-        <ChartToolbar
-          onExpand={() => setExpanded(true)}
-          onPng={() => downloadPng(ec.current, ariaLabel)}
-          onCsv={() => downloadCsv(kind, categories, series, ariaLabel)}
-        />
+        <div className="print:hidden no-print">
+          <ChartToolbar
+            onExpand={() => setExpanded(true)}
+            onPng={() => downloadPng(ec.current, ariaLabel)}
+            onCsv={() => downloadCsv(kind, categories, series, ariaLabel)}
+          />
+        </div>
       )}
       {expanded && (
         <ExpandedChart title={ariaLabel} onClose={() => setExpanded(false)}>

@@ -172,26 +172,35 @@ a, button, select, summary, [role="button"], input, label { touch-action: manipu
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm 8mm;
+    margin: 10mm 10mm 12mm 10mm;
   }
 
-  /* Force browsers to print all backgrounds, colors, and gradients */
+  /* 1. Never clip or truncate print content */
   *, *::before, *::after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 
-  /* Hide app chrome: sidebar, top navigation, buttons, modals, and elements marked no-print */
+  html, body, div, main, article, section {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  /* 2. Hide all non-report application chrome */
   aside,
   nav,
   .no-print,
   .print\:hidden,
   button,
-  [role="dialog"] {
+  [role="dialog"],
+  [role="navigation"],
+  .group\/chart > div:first-child {
     display: none !important;
   }
 
-  /* Reset layout structure so report fills the whole page */
+  /* 3. Reset layout structure so report fills the whole page */
   html, body {
     background: #ffffff !important;
     color: #18181b !important;
@@ -216,15 +225,70 @@ a, button, select, summary, [role="button"], input, label { touch-action: manipu
 
   .report-root {
     max-width: 100% !important;
+    width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
+    background: #ffffff !important;
+    color: #18181b !important;
   }
 
-  /* Prevent sections and cards from splitting awkwardly across pages */
+  /* 4. Print typography & spacing */
+  .report-root h1 {
+    font-size: 24pt !important;
+    line-height: 1.15 !important;
+  }
+
+  /* 5. Force multi-column layouts on paper (overcomes Tailwind 1024px screen-only breakpoints) */
+  .report-root .print-grid-2,
+  .report-root .grid.lg\:grid-cols-2 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+
+  .report-root .print-grid-4,
+  .report-root .grid.grid-cols-2.sm\:grid-cols-4 {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .report-root .print-grid-6,
+  .report-root .grid.grid-cols-2.md\:grid-cols-3.lg\:grid-cols-6 {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 1px !important;
+  }
+
+  .report-root .grid.md\:grid-cols-2 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* 6. Page Break Management: prevent awkward splits across pages */
   .break-inside-avoid,
   section,
-  .report-root section {
+  .report-root header,
+  .report-root section,
+  .report-root .border.border-line,
+  .chart-enter {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+  }
+
+  .report-root h1,
+  .report-root h2,
+  .report-root h3,
+  .report-root .section-title,
+  .report-root .eyebrow {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* 7. Ensure charts scale cleanly within print bounds */
+  .report-root svg {
+    max-width: 100% !important;
+    height: auto !important;
   }
 }
