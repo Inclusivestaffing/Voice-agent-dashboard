@@ -60,6 +60,8 @@ const nextConfig: NextConfig = {
         destination: process.env.NEXT_PUBLIC_SUPABASE_URL ? "/workspaces" : "/demo",
         permanent: false,
       },
+      // Without Supabase there are no user accounts: /login is the dashboard sign-in.
+      ...(process.env.NEXT_PUBLIC_SUPABASE_URL ? [] : [{ source: "/login", destination: "/unlock", permanent: false }]),
       // Insights was removed; old links land on Analytics.
       { source: "/demo/insights", destination: `/demo?${DEMO_QS}`, permanent: false },
       { source: "/w/:slug/insights", destination: "/w/:slug/overview", permanent: false },

@@ -18,7 +18,7 @@ function LoginForm() {
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function submit(e: React.FormEvent, signUp = false) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setMsg(null);
     const sb = supabaseBrowser();
@@ -28,11 +28,6 @@ function LoginForm() {
         const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
         if (error) throw error;
         setMsg({ tone: "ok", text: "Check your inbox for a sign-in link." });
-      } else if (signUp) {
-        const { error, data } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } });
-        if (error) throw error;
-        if (data.session) { await sb.rpc("accept_invites_for_current_user"); router.push(next); }
-        else setMsg({ tone: "ok", text: "Account created. Confirm your email to continue." });
       } else {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -67,7 +62,6 @@ function LoginForm() {
       {msg && <p className={`mt-4 text-sm ${msg.tone === "ok" ? "text-good" : "text-bad"}`} role="status">{msg.text}</p>}
       <div className="mt-6 flex flex-col gap-2">
         <Button type="submit" disabled={busy}>{mode === "magic" ? "Email me a link" : "Sign in"}</Button>
-        {mode === "password" && <Button type="button" variant="ghost" disabled={busy} onClick={(e) => submit(e as unknown as React.FormEvent, true)}>Create account</Button>}
       </div>
       <button type="button" className="mt-4 text-xs text-dim underline" onClick={() => setMode(mode === "magic" ? "password" : "magic")}>
         {mode === "magic" ? "Use a password instead" : "Email me a sign-in link instead"}

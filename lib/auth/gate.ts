@@ -28,11 +28,17 @@ export async function isSignedIn(): Promise<boolean> {
   return want.length === got.length && timingSafeEqual(want, got);
 }
 
-export function passwordMatches(input: string): boolean {
+/** The sign-in email, if one is set (APP_EMAIL). Not secret; compared case-insensitively. */
+export const signInEmail = () => (process.env.APP_EMAIL ?? "").trim().toLowerCase();
+
+const same = (x: string, y: string) => timingSafeEqual(createHash("sha256").update(x).digest(), createHash("sha256").update(y).digest());
+
+/** Checks the password (and the email, when APP_EMAIL is set) in constant time. */
+export function credentialsMatch(email: string, password: string): boolean {
   if (!passwordConfigured()) return false;
-  const a = createHash("sha256").update(input).digest();
-  const b = createHash("sha256").update(process.env.APP_PASSWORD!).digest();
-  return timingSafeEqual(a, b);
+  const emailOk = same(email.trim().toLowerCase(), signInEmail());
+  const passOk = same(password, process.env.APP_PASSWORD!);
+  return (signInEmail() ? emailOk : true) && passOk;
 }
 
 export async function startSession() {

@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { endSession, passwordMatches, startSession } from "@/lib/auth/gate";
+import { credentialsMatch, endSession, startSession } from "@/lib/auth/gate";
 
 export type UnlockState = { error?: string } | null;
 
@@ -14,12 +14,13 @@ export async function unlock(_: UnlockState, form: FormData): Promise<UnlockStat
   const m = misses.get(ip);
   if (m && m.until > Date.now()) return { error: "Too many attempts. Wait a few minutes and try again." };
 
+  const email = String(form.get("email") ?? "").slice(0, 254);
   const password = String(form.get("password") ?? "").slice(0, 200);
-  if (!passwordMatches(password)) {
+  if (!credentialsMatch(email, password)) {
     const n = (m?.n ?? 0) + 1;
     misses.set(ip, { n, until: n >= 8 ? Date.now() + 5 * 60_000 : 0 });
     await new Promise((r) => setTimeout(r, 600));
-    return { error: "That password isn't right." };
+    return { error: "That email or password isn't right." };
   }
   misses.delete(ip);
   await startSession();
