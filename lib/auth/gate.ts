@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { encryptionKey } from "../crypto";
 
 /**
  * Password gate for the dashboard. When the Retell connection is saved on the server (so every
@@ -13,7 +14,7 @@ const DAYS = 30;
 export const passwordConfigured = () => (process.env.APP_PASSWORD ?? "").length >= 8;
 
 function secret() {
-  return createHash("sha256").update(`${process.env.APP_PASSWORD ?? ""}|${process.env.ENCRYPTION_KEY ?? ""}|va-session-v1`).digest();
+  return createHash("sha256").update(`${process.env.APP_PASSWORD ?? ""}|${encryptionKey()?.toString("base64") ?? ""}|va-session-v1`).digest();
 }
 const sign = (payload: string) => createHmac("sha256", secret()).update(payload).digest("base64url");
 

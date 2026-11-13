@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { decrypt, encrypt } from "../crypto";
+import { decrypt, encrypt, encryptionKey } from "../crypto";
 import { hasServerStore, storeDel, storeGet, storeSet } from "./store";
 import { isSignedIn, passwordConfigured } from "../auth/gate";
 
@@ -26,16 +26,14 @@ export const LIVE_COOKIE = "retell_conn";
 const STORE_KEY = "va:retell-connection:v1";
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
-export const encryptionReady = () => {
-  try { return Buffer.from(process.env.ENCRYPTION_KEY ?? "", "base64").length === 32; } catch { return false; }
-};
+export const encryptionReady = () => encryptionKey() !== null;
 export const storageMode = (): "server" | "browser" => (hasServerStore() ? "server" : "browser");
 /** The site requires sign-in (server storage keeps real call data behind a password). */
 export const gateActive = () => storageMode() === "server";
 
 /** Why a connection can't be saved right now, or null when it can. */
 export function storeProblem(): string | null {
-  if (!encryptionReady()) return "The server is missing its ENCRYPTION_KEY setting, so it can't store the key safely.";
+  if (!encryptionReady()) return "The server has no encryption key yet: connect Upstash Redis storage to the Vercel project (or set ENCRYPTION_KEY).";
   if (storageMode() === "server" && !passwordConfigured()) return "Set an APP_PASSWORD (at least 8 characters) in Vercel first, so only you can see the call data.";
   return null;
 }
