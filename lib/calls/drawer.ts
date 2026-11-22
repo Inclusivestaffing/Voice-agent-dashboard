@@ -1,5 +1,6 @@
 import type { RetellCall } from "../types";
 import type { CallDiagnosis } from "../ai/schemas";
+import type { HumanlikeResult } from "../humanlike/schema";
 
 /** Everything the Call History slide-over shows for one call (plain JSON, sent to the browser). */
 export interface CallDrawerData {
@@ -39,6 +40,11 @@ export interface CallDrawerData {
   contact_calls: { call_id: string; start_ts: string | null; direction: string | null; duration_ms: number | null }[];
   /** Demo calls have no recording; the panel reads the transcript aloud instead. */
   voice_preview: boolean;
+  /** How human the agent sounded (null until analyzed). */
+  humanlike: HumanlikeResult | null;
+  /** ready = analyzed; pending = queued; skipped = not judged (reason given); off = not available here. */
+  humanlike_status: "ready" | "pending" | "skipped" | "off";
+  humanlike_note: string | null;
 }
 
 const LATENCY_LABEL: Record<string, string> = {
@@ -58,6 +64,7 @@ export function toDrawerData(input: {
   analysis: { analysis?: unknown; outcome?: string | null; overall_score?: number | null; source?: string | null } | null;
   contactCalls: CallDrawerData["contact_calls"];
   voicePreview?: boolean;
+  humanlike?: { result: HumanlikeResult | null; status: CallDrawerData["humanlike_status"]; note?: string | null };
 }): CallDrawerData {
   const { row, raw, analysis } = input;
   const d = (analysis?.analysis ?? null) as CallDiagnosis | null;
@@ -115,5 +122,8 @@ export function toDrawerData(input: {
     analysis_source: analysis?.source ?? null,
     contact_calls: input.contactCalls,
     voice_preview: !!input.voicePreview,
+    humanlike: input.humanlike?.result ?? null,
+    humanlike_status: input.humanlike?.status ?? "off",
+    humanlike_note: input.humanlike?.note ?? null,
   };
 }

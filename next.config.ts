@@ -44,6 +44,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/**": ["./node_modules/ffmpeg-static/ffmpeg*"],
     "/w/**": ["./node_modules/ffmpeg-static/ffmpeg*"],
+    "/demo/**": ["./node_modules/ffmpeg-static/ffmpeg*"],
   },
   images: { remotePatterns: [{ protocol: "https", hostname: "**.supabase.co" }] },
   experimental: {

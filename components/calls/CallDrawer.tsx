@@ -9,6 +9,7 @@ import { OUTCOME_LABEL, ROOT_CAUSE_LABEL, type Outcome, type RootCause } from "@
 import { OutcomePill, cx, fmtDur, fmtMoney, fmtMs, humanize } from "@/components/ui";
 import { toast } from "@/components/feedback/Toaster";
 import CallAudio, { type CallAudioHandle } from "./CallAudio";
+import { HumanlikeTab, MomentMarkers } from "./Humanlike";
 
 const cache = new Map<string, CallDrawerData>();
 async function load(url: string, signal?: AbortSignal): Promise<CallDrawerData> {
@@ -21,7 +22,7 @@ async function load(url: string, signal?: AbortSignal): Promise<CallDrawerData> 
   return data;
 }
 
-const TABS = ["Transcript", "AI analysis", "Data", "Details"] as const;
+const TABS = ["Transcript", "Human-likeness", "AI analysis", "Data", "Details"] as const;
 type Tab = (typeof TABS)[number];
 
 /**
@@ -78,6 +79,19 @@ export default function CallDrawer({ callId, apiBase, fullHref, timezone, ids, o
     panel.current?.querySelector<HTMLElement>("[data-scroll]")?.scrollTo({ top: 0 });
     return () => ctrl.abort();
   }, [callId, apiBase, prevId, nextId]);
+
+  // A live call that's still being analyzed: check back every 8 s (up to ~2 minutes).
+  useEffect(() => {
+    if (data?.humanlike_status !== "pending" || data.call_id !== callId) return;
+    const url = `${apiBase}/${encodeURIComponent(callId)}`;
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      if (++tries > 15) { window.clearInterval(timer); return; }
+      cache.delete(url);
+      load(url).then((d) => { if (d.humanlike_status !== "pending") { setData((cur) => (cur?.call_id === d.call_id ? d : cur)); window.clearInterval(timer); } }).catch(() => {});
+    }, 8000);
+    return () => window.clearInterval(timer);
+  }, [data?.humanlike_status, data?.call_id, callId, apiBase]);
 
   useEffect(() => { panel.current?.focus(); }, []);
 
@@ -181,6 +195,10 @@ export default function CallDrawer({ callId, apiBase, fullHref, timezone, ids, o
                     previewNote={data.voice_preview
                       ? "Voice preview: demo calls have no recording, so the transcript is read aloud. Live calls play the Retell recording."
                       : "No recording for this call (recording may be turned off in the agent's data storage settings in Retell), so the transcript is read aloud."} />
+                  {data.humanlike && (
+                    <MomentMarkers moments={data.humanlike.moments} durationS={(data.duration_ms ?? 0) / 1000 || (data.transcript.at(-1)?.end ?? 0)}
+                      onSeek={(t) => { setTab("Human-likeness"); player.current?.seek(t); }} />
+                  )}
                 </div>
               </section>
 
@@ -223,6 +241,7 @@ export default function CallDrawer({ callId, apiBase, fullHref, timezone, ids, o
 
               <div className="px-5 sm:px-6 py-5" role="tabpanel">
                 {tab === "Transcript" && <Transcript data={data} time={time} playing={playing} onSeek={(t) => player.current?.seek(t)} />}
+                {tab === "Human-likeness" && <HumanlikeTab data={data} onSeek={(t) => player.current?.seek(t)} />}
                 {tab === "AI analysis" && <AiAnalysis data={data} onSeek={(t) => { setTab("Transcript"); player.current?.seek(t); }} />}
                 {tab === "Data" && <DataTab data={data} onCopy={copy} />}
                 {tab === "Details" && <DetailsTab data={data} />}

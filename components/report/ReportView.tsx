@@ -6,6 +6,7 @@ import { OUTCOME_COLOR, OUTCOME_ORDER, SENTIMENT_COLOR } from "@/lib/colors";
 import { timeSeries, METRICS, type AnalyticsCall, type Bucket } from "@/lib/metrics/aggregate";
 import Chart from "../charts/Chart";
 import ReportCallTable from "./ReportCallTable";
+import type { HumanlikeSummary } from "@/lib/humanlike/summary";
 import { fmtDur, fmtMs, fmtPct, humanize, cx } from "../ui";
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -16,7 +17,7 @@ function periodLabel(from: string, to: string, tz: string) {
 }
 
 /** The client-facing report, modeled on the Open Water Marine report layout. */
-export default function ReportView({ snap, narrative, print }: { snap: ReportSnapshot; narrative: ReportNarrative | null; print?: boolean }) {
+export default function ReportView({ snap, narrative, print, humanlike }: { snap: ReportSnapshot; narrative: ReportNarrative | null; print?: boolean; humanlike?: HumanlikeSummary | null }) {
   const s = snap.summary;
   const tz = snap.workspace.timezone;
   const agent = snap.workspace.agent_name ?? "";
@@ -199,6 +200,43 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
 
       {/* ── More analytics: in the web view and the PDF. Only the per-call lists stay web-only. ── */}
       <div className="space-y-7">
+        {humanlike && humanlike.analyzed > 0 && (
+          <Box title="How human your agent sounds" sub={`Measured from the call audio and reviewed by AI · ${humanlike.analyzed} calls${humanlike.sample ? " (sample data)" : ""}`}>
+            <div className="grid @xl:grid-cols-[180px_1fr] gap-6 items-start">
+              <div className="bg-brand-wash p-5 text-center">
+                <div className="text-5xl font-extrabold tracking-tight">{humanlike.avg}<span className="text-lg text-dim font-semibold">/100</span></div>
+                <div className="eyebrow mt-2">{humanlike.label}</div>
+              </div>
+              <div className="space-y-2.5">
+                {([["voice", "Voice"], ["timing", "Timing"], ["flow", "Flow"], ["listening", "Listening"], ["accuracy", "Accuracy"]] as const).map(([k, label]) => {
+                  const v = humanlike.sub[k];
+                  return (
+                    <div key={k} className="grid grid-cols-[84px_1fr_32px] items-center gap-3 text-[13px]">
+                      <span className="text-dim">{label}</span>
+                      <span className="h-2 bg-surface-2 overflow-hidden">{v != null && <span className="block h-full bg-ink" style={{ width: `${v}%` }} />}</span>
+                      <span className="text-right font-mono">{v ?? "—"}</span>
+                    </div>
+                  );
+                })}
+                <div className="text-[12px] font-mono text-muted pt-1">{humanlike.roboticPerCall} robotic moments and {humanlike.mistakesPerCall} mistakes per call on average</div>
+              </div>
+            </div>
+            {humanlike.patterns.length > 0 && (
+              <div className="mt-5 grid @xl:grid-cols-2 gap-5">
+                <div>
+                  <div className="eyebrow mb-2">What makes it sound robotic</div>
+                  <ul className="space-y-1.5 text-[13px]">{humanlike.patterns.slice(0, 5).map((p) => <li key={p.category} className="flex justify-between gap-3 border-b border-line pb-1.5"><span>{p.label}</span><span className="font-mono text-dim">{p.count}</span></li>)}</ul>
+                </div>
+                {humanlike.topFixes.length > 0 && (
+                  <div>
+                    <div className="eyebrow mb-2">Fixes to sound more human</div>
+                    <ol className="space-y-1.5 text-[13px] list-decimal pl-5">{humanlike.topFixes.map((f) => <li key={f.fix}>{f.fix}</li>)}</ol>
+                  </div>
+                )}
+              </div>
+            )}
+          </Box>
+        )}
         {transfersOk.length > 0 && (
           <Box className="print:hidden no-print" title={`All ${transfersOk.length} successful hand-offs`} sub="Callers the AI correctly passed to a human">
             <div className="grid @xl:grid-cols-2 gap-1.5">{transfersOk.map((c) => (

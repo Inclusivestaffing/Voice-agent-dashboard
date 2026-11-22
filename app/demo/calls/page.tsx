@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { after } from "next/server";
+import { sweepLive } from "@/lib/humanlike/run";
 import { filtersToQuery } from "@/lib/filters";
 import { toHistoryRow } from "@/lib/callHistory";
 import { filterDemo, type DemoCall } from "@/lib/demo/openWater";
@@ -10,6 +12,7 @@ import ExportRowsButton from "@/components/calls/ExportRowsButton";
 import { Empty } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const SORTABLE: Record<string, (c: DemoCall) => string | number> = {
   start_ts: (c) => c.start_ts ?? "", duration_ms: (c) => c.duration_ms ?? -1, combined_cost_cents: (c) => c.combined_cost_cents ?? -1,
@@ -32,6 +35,11 @@ export default async function DemoCalls({ searchParams }: { searchParams: Promis
     return (x < y ? -1 : x > y ? 1 : 0) * (dir === "asc" ? 1 : -1);
   });
   const historyRows = rows.map(toHistoryRow);
+  // Live workspace: catch up human-likeness analysis for the newest calls in the background.
+  if (src.live && src.conn && rows.length) {
+    const ws = src.conn, ids = rows.slice(0, 40).map((r) => r.call_id);
+    after(() => sweepLive(ws, ids, { max: 6, budgetMs: 50_000 }).then(() => undefined));
+  }
   const base = filtersToQuery(f);
   const nav = new URLSearchParams(base); nav.set("sort", sort); nav.set("dir", dir);
 

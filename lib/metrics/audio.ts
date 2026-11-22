@@ -32,10 +32,12 @@ async function ffmpegPath(): Promise<string> {
 
 /** Decode any audio URL to interleaved stereo 16-bit PCM at 8kHz. */
 export async function decodeStereo(url: string): Promise<Int16Array> {
-  if (!/^https:\/\//i.test(url)) throw new Error("Recording URL must be https");
+  // https only. Local development may also read from http://localhost (test recordings).
+  const localDev = process.env.NODE_ENV !== "production" && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i.test(url);
+  if (!/^https:\/\//i.test(url) && !localDev) throw new Error("Recording URL must be https");
   const bin = await ffmpegPath();
   return new Promise((resolve, reject) => {
-    const proc = spawn(bin, ["-hide_banner", "-loglevel", "error", "-protocol_whitelist", "https,tls,tcp", "-t", "1800", "-i", url, "-ac", "2", "-ar", String(SAMPLE_RATE), "-f", "s16le", "pipe:1"]);
+    const proc = spawn(bin, ["-hide_banner", "-loglevel", "error", "-protocol_whitelist", localDev ? "http,https,tls,tcp" : "https,tls,tcp", "-t", "1800", "-i", url, "-ac", "2", "-ar", String(SAMPLE_RATE), "-f", "s16le", "pipe:1"]);
     const chunks: Buffer[] = [];
     let err = "";
     proc.stdout.on("data", (c: Buffer) => chunks.push(c));

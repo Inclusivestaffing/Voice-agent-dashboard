@@ -1,4 +1,8 @@
 import { Suspense } from "react";
+import { after } from "next/server";
+import { summarizeHumanlike } from "@/lib/humanlike/summary";
+import { sweepLive } from "@/lib/humanlike/run";
+import HumanlikeSection from "@/components/overview/HumanlikeSection";
 import { filtersToQuery } from "@/lib/filters";
 import { summarize, previousPeriod } from "@/lib/metrics/aggregate";
 import { parseBucket } from "@/lib/charts";
@@ -11,6 +15,8 @@ import FilterBar from "@/components/filters/FilterBar";
 import { Empty } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
+// Background catch-up of human-likeness analysis runs after the page is sent.
+export const maxDuration = 60;
 
 export default async function DemoOverview({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   const sp = await searchParams;
@@ -29,6 +35,14 @@ export default async function DemoOverview({ searchParams }: { searchParams: Pro
   const q = filtersToQuery(f);
   const range = { from: f.from, to: f.to };
   const bucket = parseBucket(sp.bucket, f.from, f.to);
+  const hlResults = await src.humanlike(calls.map((c) => c.call_id));
+  const hl = summarizeHumanlike(calls, hlResults, { timezone: src.timezone, bucket });
+  // Live workspace: analyze not-yet-reviewed calls in the background, newest first.
+  if (src.live && src.conn && hl.pending > 0) {
+    const ws = src.conn;
+    const todo = [...calls].sort((x, y) => (y.start_ts ?? "").localeCompare(x.start_ts ?? "")).filter((c) => !hlResults.has(c.call_id)).map((c) => c.call_id);
+    after(() => sweepLive(ws, todo, { max: 6, budgetMs: 50_000 }).then(() => undefined));
+  }
   const opts = await src.filterOptions(all);
   const customKeys = opts.customFields.map((c) => c.key);
   const breakdown = parseBreakdown(sp.breakdown, customKeys);
@@ -61,6 +75,7 @@ export default async function DemoOverview({ searchParams }: { searchParams: Pro
             callsHref={(extra) => `/demo/calls?${q}${extra ? `&${extra}` : ""}`}
             live={src.live}
           />
+          <HumanlikeSection s={hl} live={src.live} callHref={(id) => `/demo/calls?${q}&call=${encodeURIComponent(id)}`} />
           <RetellAnalytics
             calls={calls}
             prevCalls={prevCalls}

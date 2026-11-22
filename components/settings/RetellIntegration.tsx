@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { connectRetell, disconnectRetell, updateRetell, type ConnectState } from "@/app/demo/settings/actions";
 import { Button, cx } from "@/components/ui";
+import { toast } from "@/components/feedback/Toaster";
 
 export interface ConnectedInfo {
   last4: string;
@@ -38,10 +39,10 @@ function Msg({ s }: { s: ConnectState }) {
 }
 
 /** Settings → Retell integration: connect with an API key (and optional agent IDs), then manage it. */
-export default function RetellIntegration({ connected, problem, storage }: { connected: ConnectedInfo | null; problem: string | null; storage: "server" | "browser" }) {
+export default function RetellIntegration({ connected, problem, storage, webhookUrl, aiReady = false }: { connected: ConnectedInfo | null; problem: string | null; storage: "server" | "browser"; webhookUrl?: string | null; aiReady?: boolean }) {
   return (
     <div className="space-y-4">
-      {connected ? <Connected info={connected} /> : <ConnectForm problem={problem} />}
+      {connected ? <Connected info={connected} webhookUrl={storage === "server" ? webhookUrl ?? null : null} aiReady={aiReady} /> : <ConnectForm problem={problem} />}
       <p className="flex items-start gap-2 text-[12px] text-zinc-500">
         <svg className="mt-px h-3.5 w-3.5 shrink-0 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
         {storage === "server"
@@ -89,7 +90,7 @@ export function ConnectForm({ problem }: { problem: string | null }) {
   );
 }
 
-function Connected({ info }: { info: ConnectedInfo }) {
+function Connected({ info, webhookUrl, aiReady }: { info: ConnectedInfo; webhookUrl: string | null; aiReady: boolean }) {
   const [state, action, pending] = useActionState<ConnectState, FormData>(updateRetell, null);
   const [confirming, setConfirming] = useState(false);
   const [leaving, startLeaving] = useTransition();
@@ -101,6 +102,30 @@ function Connected({ info }: { info: ConnectedInfo }) {
         <span className="text-emerald-900/80">API key <span className="font-mono">····{info.last4}</span></span>
         <span className="text-emerald-900/80">Since {new Date(info.connectedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
         <Link href="/demo/calls" className="ml-auto font-medium text-emerald-900 underline underline-offset-2">Open Call History</Link>
+      </div>
+
+      <div className="rounded-xl border border-zinc-200/80 p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h4 className="text-[13.5px] font-semibold text-zinc-900">Human-likeness analysis</h4>
+          <span className={cx("inline-flex items-center gap-1.5 rounded-md px-2 h-6 text-[12px] font-medium border", aiReady ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-amber-50 text-amber-900 border-amber-200")}>
+            <span className={cx("h-1.5 w-1.5 rounded-full", aiReady ? "bg-emerald-500" : "bg-amber-500")} aria-hidden />
+            {aiReady ? "AI review on" : "Measurements only"}
+          </span>
+        </div>
+        <p className="text-[12.5px] text-zinc-500">
+          Every call is analyzed automatically: the voice is measured from the recording and {aiReady ? "Claude reviews it for robotic phrasing and mistakes." : "the AI review is off until an ANTHROPIC_API_KEY is added in Vercel (Project → Settings → Environment Variables)."}
+        </p>
+        {webhookUrl && (
+          <div>
+            <span className={label}>Webhook URL for instant analysis</span>
+            <div className="mt-1.5 flex gap-2">
+              <input readOnly value={webhookUrl} onFocus={(e) => e.currentTarget.select()} className={cx(field, "mt-0 font-mono text-[12px]")} aria-label="Webhook URL" />
+              <button type="button" onClick={() => navigator.clipboard.writeText(webhookUrl).then(() => toast("Webhook URL copied")).catch(() => toast("Couldn't copy", "error"))}
+                className="h-10 shrink-0 rounded-lg border border-zinc-200 px-3 text-[13px] font-medium text-zinc-700 hover:bg-zinc-50">Copy</button>
+            </div>
+            <p className="mt-1.5 text-[12px] text-zinc-500">In Retell, paste it into each agent&apos;s Webhook URL (or Settings → Webhooks). Without it, calls are still analyzed when you open Analytics or Call History, just not instantly.</p>
+          </div>
+        )}
       </div>
 
       <form action={action} className="space-y-4">

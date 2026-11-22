@@ -1,8 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { isResult } from "@/lib/humanlike/schema";
+import { analyzeLiveCall } from "@/lib/humanlike/run";
 import { getSource } from "@/lib/source";
 import { toDrawerData } from "@/lib/calls/drawer";
 
 const CALL_ID = /^[A-Za-z0-9_-]{1,128}$/;
+// Room for a first-time human-likeness analysis that runs after the response is sent.
+export const maxDuration = 60;
 
 /** Call details for the Call History slide-over: sample data, or the connected Retell account. */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -24,6 +28,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     .map((x) => ({ call_id: x.call_id, start_ts: x.start_ts, direction: x.direction, duration_ms: x.duration_ms }));
   if (!contactCalls.some((x) => x.call_id === c.call_id)) contactCalls.unshift({ call_id: c.call_id, start_ts: c.start_ts, direction: c.direction, duration_ms: c.duration_ms });
 
+  // Human-likeness: stored result, or queue this call now if it hasn't been analyzed yet.
+  const hl = await src.humanlikeOne(c.call_id);
+  if (!hl && src.live && src.conn) { const ws = src.conn; after(() => analyzeLiveCall(ws, c.call_id).then(() => undefined)); }
+  const humanlike = isResult(hl)
+    ? { result: hl, status: "ready" as const }
+    : hl ? { result: null, status: "skipped" as const, note: hl.reason }
+    : { result: null, status: (src.live ? "pending" : "off") as "pending" | "off", note: src.live ? "Analyzing this call now. It usually takes under a minute." : null };
+
   const data = toDrawerData({
     row: { ...c, to_number: c.to_number ?? null, transfer_destination: c.transfer_destination ?? null, custom_analysis: c.custom_analysis ?? null },
     raw,
@@ -32,6 +44,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       : c.outcome ? { analysis: null, outcome: c.outcome, overall_score: null, source: "rules" } : null,
     contactCalls,
     voicePreview: !src.live,
+    humanlike,
   });
   return NextResponse.json(data, { headers: { "Cache-Control": "private, no-store" } });
 }

@@ -2,7 +2,10 @@ import "server-only";
 import { supabaseAdmin } from "../db/supabase";
 import { fetchCallDetails } from "../retell/sync";
 import { computeTiming, type Segment, type TimingMetrics, type TimelineEvent } from "../metrics/timing";
-import { analyzeRecording, type AudioMetrics } from "../metrics/audio";
+import { analyzePcm, decodeStereo, type AudioMetrics } from "../metrics/audio";
+import { analyzeAgentVoice, timedTurns } from "../humanlike/acoustics";
+import { judgeHumanlike } from "../humanlike/analyze";
+import { HL_VERSION, isResult, type HumanlikeStored } from "../humanlike/schema";
 import { preClassify, type RuleResult } from "../metrics/classify";
 import { analyzeCall, overallScore, type AnalyzeInput } from "../ai/analyzeCall";
 import { PROMPT_VERSION, type CallDiagnosis } from "../ai/schemas";
@@ -18,7 +21,7 @@ export function describeBusinessHours(bh: Record<string, [number, number]> | nul
 /** Prepare everything the AI needs for one call; computes and stores timing + audio metrics. */
 export async function prepareCall(workspaceId: string, callId: string): Promise<{
   call: RetellCall; segments: Segment[]; timing: TimingMetrics; events: TimelineEvent[];
-  audio: AudioMetrics | null; rule: RuleResult | null; input: AnalyzeInput;
+  audio: AudioMetrics | null; rule: RuleResult | null; input: AnalyzeInput; pcm: Int16Array | null;
 }> {
   const db = supabaseAdmin();
   const { data: row } = await db.from("calls").select("*").eq("workspace_id", workspaceId).eq("call_id", callId).single<CallRow>();
@@ -29,10 +32,12 @@ export async function prepareCall(workspaceId: string, callId: string): Promise<
 
   let audio: AudioMetrics | null = null;
   let audioError: string | null = null;
+  let pcm: Int16Array | null = null; // decoded once, reused by the human-likeness analysis
   const recording = call.recording_multi_channel_url ?? call.recording_url;
   if (recording && process.env.AUDIO_ANALYSIS !== "off" && (call.duration_ms ?? 0) > 0) {
     try {
-      audio = await analyzeRecording(recording, segments);
+      pcm = await decodeStereo(recording);
+      audio = analyzePcm(pcm, segments);
     } catch (e) {
       audioError = e instanceof Error ? e.message.slice(0, 500) : String(e);
     }
@@ -67,7 +72,7 @@ export async function prepareCall(workspaceId: string, callId: string): Promise<
     successDefinition: ws?.success_definition ?? "The caller's request was completed.",
     businessHours: describeBusinessHours(ws?.business_hours, ws?.timezone ?? "UTC"),
   };
-  return { call, segments, timing, events, audio, rule, input };
+  return { call, segments, timing, events, audio, rule, input, pcm };
 }
 
 export function ruleToDiagnosis(r: RuleResult): CallDiagnosis {
@@ -121,15 +126,33 @@ export async function processCall(workspaceId: string, callId: string) {
   if (prep.call.call_status === "ongoing" || prep.call.call_status === "registered") return { skipped: "call not finished" };
   if (prep.rule) {
     await saveDiagnosis(workspaceId, callId, ruleToDiagnosis(prep.rule), { source: "rules" });
+    await saveHumanlikeDb(workspaceId, { version: HL_VERSION, call_id: callId, skipped: true, reason: "Not a real conversation (silent, voicemail or spam).", analyzed_at: new Date().toISOString() });
     return { outcome: prep.rule.outcome, source: "rules" };
   }
+  // How human the agent sounded (voice measured from the recording + Claude's review). Never blocks the diagnosis.
+  const humanlike = (async () => {
+    try {
+      const turns = timedTurns(prep.call.transcript_object);
+      const r = (prep.call.duration_ms ?? 0) < 10_000 || turns.filter((t) => t.role === "agent").length < 2
+        ? { version: HL_VERSION, call_id: callId, skipped: true as const, reason: "Too short to judge.", analyzed_at: new Date().toISOString() }
+        : await judgeHumanlike(prep.call, analyzeAgentVoice(prep.pcm, turns), prep.call.agent_name ?? null);
+      await saveHumanlikeDb(workspaceId, r);
+    } catch (e) { console.error("humanlike failed", callId, e); }
+  })();
   const res = await analyzeCall(prep.input);
+  await humanlike;
   await saveDiagnosis(workspaceId, callId, res.diagnosis, {
     source: "llm", model: res.model,
     input_tokens: (res.usage.input_tokens ?? 0) + (res.usage.cache_read_input_tokens ?? 0) + (res.usage.cache_creation_input_tokens ?? 0),
     output_tokens: res.usage.output_tokens,
   });
   return { outcome: res.diagnosis.outcome, source: "llm" };
+}
+
+async function saveHumanlikeDb(workspaceId: string, r: HumanlikeStored) {
+  await supabaseAdmin().from("call_humanlike").upsert({
+    workspace_id: workspaceId, call_id: r.call_id, result: r, score: isResult(r) ? r.score : null, analyzed_at: r.analyzed_at,
+  }, { onConflict: "workspace_id,call_id" });
 }
 
 /** Process up to `limit` pending calls with bounded concurrency inside a time budget. */

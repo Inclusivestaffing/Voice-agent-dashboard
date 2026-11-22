@@ -2,7 +2,10 @@ import "server-only";
 import { cache } from "react";
 import { demoCalls, demoFilterOptions, DEMO_BH, DEMO_TZ, DEMO_WORKSPACE, type DemoCall } from "./demo/openWater";
 import { demoRawCall } from "./demo/callRaw";
-import { getLiveConn, type LiveConn } from "./live/conn";
+import { getActiveWorkspace, type LiveWorkspace } from "./live/conn";
+import { getHumanlike, getHumanlikeMany } from "./humanlike/store";
+import { sampleHumanlike } from "./humanlike/sample";
+import type { HumanlikeStored } from "./humanlike/schema";
 import { liveAgents, liveCall, liveCalls, toRow } from "./live/retell";
 import type { RetellCall } from "./types";
 import type { FilterOptions } from "@/components/filters/FilterBar";
@@ -13,7 +16,10 @@ import type { FilterOptions } from "@/components/filters/FilterBar";
  */
 export interface Source {
   live: boolean;
-  conn: LiveConn | null;
+  conn: LiveWorkspace | null;
+  /** Human-likeness results: stored ones for a live workspace, sample ones for the demo. */
+  humanlike: (callIds: string[]) => Promise<Map<string, HumanlikeStored>>;
+  humanlikeOne: (callId: string) => Promise<HumanlikeStored | null>;
   name: string;
   agentName: string | null;
   timezone: string;
@@ -28,11 +34,13 @@ export interface Source {
 const WEEKDAYS: Record<string, [number, number]> = { mon: [9, 17], tue: [9, 17], wed: [9, 17], thu: [9, 17], fri: [9, 17] };
 
 export const getSource = cache(async (): Promise<Source> => {
-  const conn = await getLiveConn();
+  const conn = await getActiveWorkspace();
   if (!conn) {
     return {
       live: false, conn: null, name: DEMO_WORKSPACE.name, agentName: "Allen", timezone: DEMO_TZ, businessHours: DEMO_BH,
       calls: async () => demoCalls(),
+      humanlike: async (ids) => { const all = sampleHumanlike(); return new Map(ids.flatMap((id) => (all.has(id) ? [[id, all.get(id)!] as const] : []))); },
+      humanlikeOne: async (id) => sampleHumanlike().get(id) ?? null,
       filterOptions: async () => demoFilterOptions(),
       call: async (id) => {
         const row = demoCalls().find((c) => c.call_id === id);
@@ -47,6 +55,8 @@ export const getSource = cache(async (): Promise<Source> => {
     live: true, conn, name: conn.name, timezone: conn.timezone, businessHours: WEEKDAYS,
     agentName: chosen.length === 1 ? chosen[0].agent_name : null,
     calls: (from, to) => liveCalls(conn, from, to),
+    humanlike: (ids) => getHumanlikeMany(conn.id, ids),
+    humanlikeOne: (id) => getHumanlike(conn.id, id),
     filterOptions: async (calls) => liveOptions(calls, chosen.map((a) => ({ id: a.agent_id, name: a.agent_name }))),
     call: async (id) => {
       const raw = await liveCall(conn, id);

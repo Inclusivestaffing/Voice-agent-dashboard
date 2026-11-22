@@ -26,3 +26,12 @@ async function command<T>(args: (string | number)[]): Promise<T | null> {
 export const storeGet = (key: string) => command<string>(["GET", key]);
 export const storeSet = (key: string, value: string) => command<string>(["SET", key, value]);
 export const storeDel = (key: string) => command<number>(["DEL", key]);
+export const storeMGet = (keys: string[]) => (keys.length ? command<(string | null)[]>(["MGET", ...keys]) : Promise.resolve([] as (string | null)[]));
+/** SET only if the key doesn't exist, expiring after `ttlS` seconds. True when this call set it (a lock). */
+export const storeSetNx = async (key: string, value: string, ttlS: number) => (await command<string>(["SET", key, value, "NX", "EX", ttlS])) === "OK";
+/** Increment a counter that expires after `ttlS` seconds; returns the new value. */
+export async function storeIncr(key: string, ttlS: number): Promise<number> {
+  const n = (await command<number>(["INCR", key])) ?? 0;
+  if (n === 1) await command<number>(["EXPIRE", key, ttlS]);
+  return n;
+}

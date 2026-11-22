@@ -3,6 +3,7 @@ import { supabaseServer } from "@/lib/db/supabase";
 import { UUID } from "@/lib/security";
 import { toDrawerData } from "@/lib/calls/drawer";
 import type { CallRow } from "@/lib/types";
+import { isResult, type HumanlikeStored } from "@/lib/humanlike/schema";
 
 const CALL_ID = /^[A-Za-z0-9_-]{1,128}$/;
 
@@ -16,10 +17,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ workspa
   const { data: member } = await db.from("workspace_members").select("role").eq("workspace_id", workspaceId).eq("user_id", user.id).maybeSingle();
   if (!member) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const [{ data: call }, { data: analysis }] = await Promise.all([
+  const [{ data: call }, { data: analysis }, { data: hlRow }] = await Promise.all([
     db.from("calls").select("*").eq("workspace_id", workspaceId).eq("call_id", callId).maybeSingle<CallRow>(),
     db.from("call_analyses").select("outcome, analysis, overall_score, source").eq("workspace_id", workspaceId).eq("call_id", callId).maybeSingle(),
+    db.from("call_humanlike").select("result").eq("workspace_id", workspaceId).eq("call_id", callId).maybeSingle(),
   ]);
+  const hl = (hlRow?.result ?? null) as HumanlikeStored | null;
+  const humanlike = isResult(hl) ? { result: hl, status: "ready" as const }
+    : hl ? { result: null, status: "skipped" as const, note: hl.reason }
+    : { result: null, status: "pending" as const, note: "This call hasn't been analyzed yet. It's picked up with the next sync." };
   if (!call) return NextResponse.json({ error: "Call not found" }, { status: 404 });
 
   const number = call.direction === "outbound" ? call.to_number : call.from_number;
@@ -37,6 +43,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ workspa
     .sort((a, b) => (b.start_ts ?? "").localeCompare(a.start_ts ?? ""))
     .slice(0, 20);
 
-  const data = toDrawerData({ row: call, raw: call.raw, analysis, contactCalls: contact });
+  const data = toDrawerData({ row: call, raw: call.raw, analysis, contactCalls: contact, humanlike });
   return NextResponse.json(data, { headers: { "Cache-Control": "private, no-store" } });
 }

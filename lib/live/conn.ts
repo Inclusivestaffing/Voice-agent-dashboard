@@ -89,6 +89,18 @@ async function saveAll(list: LiveWorkspace[]) {
   jar.delete(LEGACY_COOKIE);
 }
 
+/**
+ * Server-side reads for background jobs (Retell webhook, cron) that run without a browser session.
+ * Only ever used to process calls, never to show data to a visitor.
+ */
+export async function systemListWorkspaces(): Promise<LiveWorkspace[]> {
+  if (storageMode() !== "server" || !encryptionReady()) return [];
+  try {
+    const list = decode<LiveWorkspace[]>(await storeGet(STORE_KEY));
+    return (Array.isArray(list) ? list : []).filter(valid);
+  } catch { return []; }
+}
+
 /** The workspace this browser is looking at: a created workspace, or null for the sample. */
 export const getActiveWorkspace = cache(async (): Promise<LiveWorkspace | null> => {
   const id = (await cookies()).get(ACTIVE_COOKIE)?.value;
