@@ -165,8 +165,10 @@ export default function DateRangePicker({ value, presets, onApply, timezone, tod
       </button>
 
       {open && (
+        <>
+        <div aria-hidden onClick={() => setOpen(false)} className="sm:hidden fixed inset-0 z-[84] bg-zinc-900/30 palette-fade" />
         <div id={dialogId} role="dialog" aria-label="Choose a date range"
-          className="palette-in absolute left-0 top-full z-50 mt-2 w-[min(880px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-pop">
+          className="palette-in absolute left-0 top-full z-50 mt-2 w-[min(880px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-pop max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:left-0 max-sm:mt-0 max-sm:w-full max-sm:max-h-[88dvh] max-sm:overflow-y-auto max-sm:rounded-b-none max-sm:rounded-t-2xl max-sm:z-[85] max-sm:pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-center gap-2 border-b border-zinc-200/70 px-4 py-3 text-[13px]">
             <CalendarIcon />
             <span className="text-zinc-500">Date range:</span>
@@ -187,11 +189,13 @@ export default function DateRangePicker({ value, presets, onApply, timezone, tod
 
             {/* Calendars */}
             <div className="flex-1 min-w-0 p-4">
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-x-6 md:grid-cols-2">
                 {[0, 1].map((k) => {
                   const month = addMonths(view, k);
                   return (
-                    <div key={k} className={cx(k === 1 && "hidden md:block")}>
+                    <div key={k}>
+                      {/* Phones show one month; the second column keeps only its "To" time. */}
+                      <div className={cx(k === 1 && "hidden md:block")}>
                       <div className="mb-2 flex h-8 items-center">
                         {k === 0
                           ? <MonthBtn label="Previous month" onClick={() => setView(addMonths(view, -1))} d="m15 18-6-6 6-6" />
@@ -200,8 +204,9 @@ export default function DateRangePicker({ value, presets, onApply, timezone, tod
                         <MonthBtn label="Next month" onClick={() => setView(addMonths(view, 1))} d="m9 18 6-6-6-6" className={cx(k === 0 && "md:invisible")} />
                       </div>
                       <Month month={month} today={today} lo={lo} hi={hi} min={min} max={max} onPick={pick} onHover={(d) => from && !to && setHover(d)} />
+                      </div>
                       {showTime && (
-                        <label className="mt-3 flex h-9 items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50/60 pl-2.5 pr-1 text-[13px]">
+                        <label className="mt-3 max-md:mt-2 flex h-9 items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50/60 pl-2.5 pr-1 text-[13px]">
                           <span className="text-[12px] text-zinc-500 w-8">{k === 0 ? "From" : "To"}</span>
                           <input type="time" value={k === 0 ? fromTime : toTime} onChange={(e) => { setPreset(null); (k === 0 ? setFromTime : setToTime)(e.target.value || (k === 0 ? "00:00" : "23:59")); if (!from && !to) { const pd = presetDates(preset); if (pd) { setFrom(pd[0]); setTo(pd[1]); } } }}
                             className="flex-1 min-w-0 bg-transparent text-zinc-800 outline-none tabular" />
@@ -215,13 +220,14 @@ export default function DateRangePicker({ value, presets, onApply, timezone, tod
             </div>
           </div>
 
-          <div className="flex items-center gap-3 border-t border-zinc-200/70 px-4 py-3">
-            <span className="min-w-0 flex-1 truncate text-[13px] text-zinc-500">Range: <span className="text-zinc-900">{draftLabel}</span></span>
+          <div className="flex items-center gap-3 border-t border-zinc-200/70 px-4 py-3 max-sm:sticky max-sm:bottom-0 max-sm:bg-white max-sm:flex-wrap">
+            <span className="min-w-0 flex-1 truncate text-[13px] text-zinc-500 max-sm:basis-full">Range: <span className="text-zinc-900">{draftLabel}</span></span>
             <button type="button" onClick={() => setOpen(false)} className="h-9 rounded-lg border border-zinc-200 px-4 text-[13px] font-medium text-zinc-700 hover:bg-zinc-50">Cancel</button>
             <button type="button" onClick={apply} disabled={!ready}
               className="h-9 rounded-lg bg-zinc-900 px-4 text-[13px] font-medium text-white hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed">Apply</button>
           </div>
         </div>
+        </>
       )}
     </div>
   );

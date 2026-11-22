@@ -121,7 +121,7 @@ export default function CallHistoryTable({ rows, timezone, detailBase, navQuery,
           Customize fields
         </button>
         {open && (
-          <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-zinc-200 rounded-xl shadow-pop p-4 w-72 max-h-[420px] overflow-y-auto">
+          <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-zinc-200 rounded-xl shadow-pop p-4 w-72 max-h-[420px] overflow-y-auto max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:left-0 max-sm:mt-0 max-sm:w-full max-sm:max-h-[88dvh] max-sm:overflow-y-auto max-sm:rounded-b-none max-sm:rounded-t-2xl max-sm:z-[85] max-sm:pb-[env(safe-area-inset-bottom)]">
             {(["Retell", "AI analysis"] as const).map((g) => (
               <fieldset key={g} className="mb-3">
                 <legend className="text-[11px] font-semibold text-zinc-500 mb-2">{g === "Retell" ? "Retell fields" : "AI analysis"}</legend>

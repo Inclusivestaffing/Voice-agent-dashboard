@@ -198,7 +198,6 @@ a, button, select, summary, [role="button"], input, label { touch-action: manipu
   html, body, div, main, article, section {
     overflow: visible !important;
     max-height: none !important;
-    height: auto !important;
   }
 
   /* 2. Hide all non-report application chrome */
@@ -208,8 +207,7 @@ a, button, select, summary, [role="button"], input, label { touch-action: manipu
   .print\:hidden,
   button,
   [role="dialog"],
-  [role="navigation"],
-  .group\/chart > div:first-child {
+  [role="navigation"] {
     display: none !important;
   }
 
@@ -281,9 +279,7 @@ a, button, select, summary, [role="button"], input, label { touch-action: manipu
 
   /* 6. Page Break Management: prevent awkward splits across pages */
   .break-inside-avoid,
-  section,
   .report-root header,
-  .report-root section,
   .report-root .border.border-line,
   .chart-enter {
     break-inside: avoid !important;
@@ -299,9 +295,17 @@ a, button, select, summary, [role="button"], input, label { touch-action: manipu
     page-break-after: avoid !important;
   }
 
-  /* 7. Ensure charts scale cleanly within print bounds */
-  .report-root svg {
-    max-width: 100% !important;
-    height: auto !important;
-  }
+  /* 7. Compact first page so the summary sits under the header */
+  .report-root header { padding-bottom: 14px !important; margin-bottom: 14px !important; }
+  .report-root header img { height: 40px !important; margin-bottom: 10px !important; }
+  .report-root header p { margin-top: 8px !important; font-size: 13px !important; }
+  .report-root header .print-grid-4 { margin-top: 12px !important; padding-top: 10px !important; }
+  .report-root .mb-7 { margin-bottom: 16px !important; }
+  .report-root .p-6 { padding: 16px !important; }
+  header.sticky { display: none !important; }
 }
+
+/* "Download PDF" lays the report out at a fixed page width (any device), so the PDF from a phone
+   matches the one from a desktop. The report's columns respond to its own width (container queries). */
+html.pdf-mode .report-root { width: 760px !important; max-width: 760px !important; min-width: 760px !important; padding: 0 !important; margin: 0 !important; }
+html.pdf-mode .report-root .no-print { display: none !important; }

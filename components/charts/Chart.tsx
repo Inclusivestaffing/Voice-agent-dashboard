@@ -94,6 +94,18 @@ function useNearViewport<T extends HTMLElement>() {
   return { ref, visible };
 }
 
+/** Rows a wrapped ECharts legend needs at a given width (12px text, 10px swatch). */
+function legendRowsFor(labels: string[], width: number): number {
+  if (!width) return Math.ceil(labels.length / 2);
+  let rows = 1, x = 0;
+  for (const l of labels) {
+    const w = 10 + 5 + l.length * 6.6 + 12;
+    if (x > 0 && x + w > width) { rows++; x = 0; }
+    x += w;
+  }
+  return rows;
+}
+
 const prefersReducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 /** ECharts renders tooltip strings as HTML; every data-derived label must be escaped. */
@@ -120,6 +132,10 @@ export default function Chart(props: ChartProps) {
   const [isPrint, setIsPrint] = useState(false);
   const t = useTokens();
   const { ref, visible: nearViewport } = useNearViewport<HTMLDivElement>();
+  // The chart adapts to its own width (phone cards, PDF pages): legends wrap or move below a donut.
+  const [width, setWidth] = useState(0);
+  const [touch, setTouch] = useState(false);
+  useEffect(() => { setTouch(!!window.matchMedia?.("(hover: none)").matches); }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -130,7 +146,18 @@ export default function Chart(props: ChartProps) {
   }, []);
 
   const visible = forceVisible || isPrint || nearViewport;
-  const option = useMemo(() => {
+  // Re-attach when the placeholder is swapped for the drawn chart (same ref, new element).
+  const ready = !!t["--text"] && visible;
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const measure = () => { const w = el.getBoundingClientRect().width; if (w) setWidth(Math.round(w / 8) * 8); };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref, ready]);
+  const built = useMemo(() => {
     if (!t["--text"]) return null;
     // Short, quiet motion: marks grow in 300 ms on first draw; updates (filters) morph in 200 ms.
     const motion = prefersReducedMotion()
@@ -144,13 +171,37 @@ export default function Chart(props: ChartProps) {
       extraCssText: "box-shadow:0 0 0 1px rgba(24,24,27,.04),0 8px 24px -6px rgba(24,24,27,.18);border-radius:10px;border:0;",
     };
     const multi = series.length >= 2;
-    const legend = multi ? { type: "plain", top: 0, left: 0, right: toolbar ? 88 : 0, icon: "roundRect", itemWidth: 10, itemHeight: 10, itemGap: 10, textStyle } : undefined;
-    // Reserve room for a wrapped legend: ~3 short names fit per row in a narrow card.
-    const legendRows = multi ? Math.ceil(series.length / 2) : 0;
+    const toolbarRoom = toolbar && !touch ? 88 : 0;
+    const legend = multi ? { type: "plain", top: 0, left: 0, right: toolbarRoom, icon: "roundRect", itemWidth: 10, itemHeight: 10, itemGap: 10, textStyle } : undefined;
+    // Room for the legend, measured against the chart's real width; the plot keeps its full height.
+    const legendRows = multi ? legendRowsFor(series.map((x) => x.name), Math.max(0, width - toolbarRoom)) : 0;
+    const plotHeight = height + Math.max(0, legendRows - 1) * 20;
 
     if (kind === "donut") {
       const total = series[0]?.data.reduce<number>((a, b) => a + (b ?? 0), 0) || 1;
-      return {
+      // Narrow cards (phones, half a PDF page): ring on top, legend underneath, never overlapping.
+      if (width && (legendPosition === "bottom" || width < 520)) {
+        const labelsText = categories.map((c, i) => `${c} ${series[0].data[i] ?? 0}`);
+        const r = Math.max(56, Math.min(92, width / 2 - 24));
+        const rows = legendRowsFor(labelsText, width);
+        const h = r * 2 + 28 + rows * 22 + 6;
+        return { h, option: {
+          ...motion,
+          tooltip: { ...tooltip, trigger: "item", valueFormatter: undefined,
+            formatter: (p: { name: string; value: number; marker: string }) => `${p.marker} ${esc(p.name)}<br/><b>${esc(p.value)}</b> · ${Math.round((p.value / total) * 100)}%` },
+          legend: { type: "plain", orient: "horizontal", top: r * 2 + 24, left: 0, right: 0, itemGap: 10, icon: "roundRect", itemWidth: 10, itemHeight: 10, textStyle,
+            formatter: (name: string) => `${name} ${series[0].data[categories.indexOf(name)] ?? 0}` },
+          series: [{
+            type: "pie", radius: [r * 0.68, r], center: ["50%", r + 8], avoidLabelOverlap: true,
+            label: { show: true, position: "center", formatter: () => `${total}`, fontSize: 22, fontWeight: 600, color: t["--text"], fontFamily: "Geist, system-ui, sans-serif" },
+            labelLine: { show: false },
+            itemStyle: { borderColor: t["--surface"], borderWidth: 2, borderRadius: 3 },
+            emphasis: { scale: true, scaleSize: 3, label: { show: true } },
+            data: categories.map((c, i) => ({ name: c, value: series[0].data[i] ?? 0, itemStyle: { color: color(sliceColors?.[i], i) } })),
+          }],
+        } };
+      }
+      return { h: height, option: {
         ...motion,
         tooltip: { ...tooltip, trigger: "item", valueFormatter: undefined,
           formatter: (p: { name: string; value: number; marker: string }) => `${p.marker} ${esc(p.name)}<br/><b>${esc(p.value)}</b> · ${Math.round((p.value / total) * 100)}%` },
@@ -168,7 +219,7 @@ export default function Chart(props: ChartProps) {
           emphasis: { scale: true, scaleSize: 3, label: { show: true } },
           data: categories.map((c, i) => ({ name: c, value: series[0].data[i] ?? 0, itemStyle: { color: color(sliceColors?.[i], i) } })),
         }],
-      };
+      } };
     }
 
     const horizontal = kind === "bar";
@@ -217,7 +268,7 @@ export default function Chart(props: ChartProps) {
         emphasis: { focus: multi ? "series" : "none" },
       };
     });
-    return {
+    return { h: plotHeight, option: {
       ...motion,
       legend,
       tooltip: {
@@ -235,8 +286,10 @@ export default function Chart(props: ChartProps) {
       xAxis: horizontal ? valAxis : catAxis,
       yAxis: horizontal ? { ...catAxis, inverse: true } : valAxis,
       series: s,
-    };
-  }, [t, kind, categories, series, unit, labels, sliceColors, legendPosition, toolbar]);
+    } };
+  }, [t, kind, categories, series, unit, labels, sliceColors, legendPosition, toolbar, width, touch, height]);
+  const option = built?.option ?? null;
+  const chartHeight = built?.h ?? height;
 
   // Reserve the chart's exact height before it draws, so nothing below it jumps.
   if (!option || !visible) {
@@ -263,7 +316,7 @@ export default function Chart(props: ChartProps) {
         ref={ec}
         echarts={echarts}
         option={option}
-        style={{ height, width: "100%" }}
+        style={{ height: chartHeight, width: "100%" }}
         notMerge
         lazyUpdate
         opts={{ renderer: "svg" }}
@@ -327,7 +380,7 @@ function ToolButton({ label, onClick, children }: { label: string; onClick: () =
 
 function ChartToolbar({ onExpand, onPng, onCsv }: { onExpand: () => void; onPng: () => void; onCsv: () => void }) {
   return (
-    <div className="absolute -top-1 right-0 z-10 flex items-center gap-0.5 rounded-lg border border-zinc-200/70 bg-white/95 p-0.5 opacity-0 shadow-card backdrop-blur transition-opacity duration-150 group-hover/chart:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
+    <div className="absolute -top-1 right-0 z-10 flex items-center gap-0.5 rounded-lg border border-zinc-200/70 bg-white/95 p-0.5 opacity-0 shadow-card backdrop-blur transition-opacity duration-150 group-hover/chart:opacity-100 focus-within:opacity-100 [@media(hover:none)]:static [@media(hover:none)]:mb-1 [@media(hover:none)]:ml-auto [@media(hover:none)]:w-fit [@media(hover:none)]:opacity-100 [@media(hover:none)]:border-transparent [@media(hover:none)]:shadow-none [@media(hover:none)]:bg-transparent">
       <ToolButton label="Expand chart" onClick={onExpand}><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></ToolButton>
       <ToolButton label="Download as PNG" onClick={onPng}><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></ToolButton>
       <ToolButton label="Download data (CSV)" onClick={onCsv}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5M12 15V3" /></ToolButton>

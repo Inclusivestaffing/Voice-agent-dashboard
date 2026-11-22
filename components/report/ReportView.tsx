@@ -61,19 +61,19 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
   const volumeLabels = volumeSeries.x.map((x) => (autoBucket === "hour" ? x.slice(11, 16) : x.slice(5)));
 
   return (
-    <div className="report-root max-w-[1200px] mx-auto px-4 sm:px-6 py-8 bg-surface text-ink" style={{ ["--brand" as string]: snap.workspace.brand_primary }}>
+    <div className="report-root @container max-w-[1200px] mx-auto px-4 sm:px-6 py-8 bg-surface text-ink" style={{ ["--brand" as string]: snap.workspace.brand_primary }}>
       {/* HERO */}
       <header className="border-b-2 border-ink pb-7 mb-7 break-inside-avoid">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={snap.workspace.logo_url || "/inclusive-logo.png"}
           alt={snap.workspace.name || "Inclusive Staffing"}
-          className="h-12 sm:h-14 w-auto object-contain mb-5"
+          className="h-12 @lg:h-14 w-auto object-contain mb-5"
         />
-        <div className="inline-block bg-brand text-black font-mono text-[11px] font-bold tracking-widest uppercase px-2.5 py-1 mb-4">{snap.workspace.name} · {monthTag} Report</div>
-        <h1 className="text-3xl sm:text-[42px] font-extrabold tracking-tight leading-[1.1]">Your AI Voice Agent<br />Handled <span className="accent-mark">{s.total} Calls</span></h1>
+        <div data-report-title={`${snap.workspace.name} ${monthTag} report`} className="inline-block bg-brand text-black font-mono text-[11px] font-bold tracking-widest uppercase px-2.5 py-1 mb-4">{snap.workspace.name} · {monthTag} Report</div>
+        <h1 className="text-3xl @lg:text-[42px] font-extrabold tracking-tight leading-[1.1]">Your AI Voice Agent<br />Handled <span className="accent-mark">{s.total} Calls</span></h1>
         <p className="text-dim mt-4 max-w-2xl text-[15px] leading-relaxed">A plain-English report on how your AI receptionist performed: how many customers were booked, transferred to your team, or had their contact info saved for follow-up, and where the agent can do better.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mt-6 pt-5 border-t border-line print-grid-4">
+        <div className="grid grid-cols-2 @lg:grid-cols-4 gap-5 mt-6 pt-5 border-t border-line print-grid-4">
           {[["Reporting period", periodLabel(snap.period.from, snap.period.to, tz)], ["Total calls", String(s.total)], ["Unique callers", String(s.unique_callers)], ["Agent name", agent ? `${agent} (AI)` : "AI agent"]].map(([k, v]) => (
             <div key={k}><div className="eyebrow !text-muted">{k}</div><div className="font-semibold mt-1">{v}</div></div>
           ))}
@@ -87,8 +87,8 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
             <span className="block font-mono text-[11px] font-bold uppercase tracking-widest text-[#713f12] mb-2">★ Quick summary</span>
             <p className="text-[17px] font-bold leading-snug">{narrative.headline}</p>
           </div>
-          <div className="grid md:grid-cols-2 border border-brand border-t-0">
-            <div className="p-6 md:border-r border-line border-b md:border-b-0">
+          <div className="grid @xl:grid-cols-2 border border-brand border-t-0">
+            <div className="p-6 @xl:border-r border-line border-b @xl:border-b-0">
               <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-good mb-3">✓ What worked well</div>
               {narrative.what_worked.map((w, i) => <Line key={i} icon="✓" tone="good">{w}</Line>)}
             </div>
@@ -97,7 +97,7 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
               {narrative.what_needs_fixing.map((w, i) => <Line key={i} icon="!" tone="bad">{w}</Line>)}
             </div>
           </div>
-          <div className="bg-[#0b0b0b] text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="bg-[#0b0b0b] text-white px-6 py-4 flex flex-col @lg:flex-row @lg:items-center justify-between gap-3">
             <p className="text-sm">{narrative.bottom_line}</p>
             <div className="font-mono text-xs uppercase tracking-wider text-muted shrink-0">Success rate<span className="block text-3xl font-sans font-extrabold text-brand tracking-tight">{fmtPct(s.success_rate)}</span></div>
           </div>
@@ -106,7 +106,7 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
 
       {/* KPIs */}
       <Section title="Key numbers">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-line border border-line print-grid-6">
+        <div className="grid grid-cols-2 @xl:grid-cols-3 @2xl:grid-cols-6 gap-px bg-line border border-line print-grid-6">
           <K label="Calls answered" value={s.total} sub={`${s.customer_calls} real customers`} />
           <K label="Appointments booked" value={s.by_outcome.booked ?? 0} sub="added to calendar" hi />
           <K label="Connected to team" value={<>{s.transfer_ok}<span className="text-lg text-dim font-medium"> / {s.transfer_attempts}</span></>} sub={`${fmtPct(s.transfer_success_rate, 1)} success`} hi />
@@ -116,19 +116,18 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
         </div>
       </Section>
 
-      <section className="bg-[#0b0b0b] text-white p-7 flex flex-col sm:flex-row justify-between gap-6 mb-7 break-inside-avoid">
+      <section className="bg-[#0b0b0b] text-white p-7 flex flex-col @lg:flex-row justify-between gap-6 mb-7 break-inside-avoid">
         <div>
           <div className="font-mono text-[11px] font-bold uppercase tracking-widest text-brand mb-1.5">Total time your AI agent was on calls</div>
           <div className="text-5xl font-extrabold tracking-tight">{s.total_talk_min.toFixed(1)}<span className="text-xl text-muted font-medium ml-1">minutes</span></div>
         </div>
-        <div className="sm:text-right space-y-3">
+        <div className="@lg:text-right space-y-3">
           <div><div className="eyebrow !text-muted">Average per call</div><div className="text-xl font-bold text-brand">{fmtDur(s.duration_s.avg)}</div></div>
           <div><div className="eyebrow !text-muted">Longest single call</div><div className="text-xl font-bold text-brand">{fmtDur(longest)}</div></div>
         </div>
       </section>
 
-      {/* ── PAGE 2: THE ANALYTICS DIAGRAM & CORE VISUALIZATIONS ── */}
-      <div className="print-page-break" />
+      {/* Charts and analysis (also in the PDF). */}
 
       {/* The Analytics Diagram: Call volume and outcomes over time */}
       <section className="mb-7 break-inside-avoid">
@@ -155,13 +154,13 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
               data: sr.data,
               color: OUTCOME_COLOR[sr.name] || "--s1",
             }))}
-            height={185}
+            height={230}
           />
         </Box>
       </section>
 
       {/* Core Outcome & Hand-off Analysis */}
-      <div className="grid lg:grid-cols-2 gap-5 mb-7 print-grid-2 break-inside-avoid">
+      <div className="grid @2xl:grid-cols-2 gap-5 mb-7 print-grid-2 break-inside-avoid">
         <Box title="What happened on each call">
           <Chart kind="donut" forceVisible toolbar={false} ariaLabel="Outcomes" categories={outcomeKeys.map((k) => OUTCOME_LABEL[k as Outcome] ?? "Not analyzed")} series={[{ name: "Calls", data: outcomeKeys.map((k) => s.by_outcome[k]) }]} sliceColors={outcomeKeys.map((k) => OUTCOME_COLOR[k])} />
           {narrative && <Note>{narrative.chart_insights.outcomes}</Note>}
@@ -187,7 +186,7 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
       </div>
 
       {/* Caller Sentiment & Day of Week Timing */}
-      <div className="grid lg:grid-cols-2 gap-5 mb-7 print-grid-2 break-inside-avoid">
+      <div className="grid @2xl:grid-cols-2 gap-5 mb-7 print-grid-2 break-inside-avoid">
         <Box title="How callers felt">
           <Chart kind="donut" forceVisible toolbar={false} ariaLabel="Sentiment" categories={sentimentKeys} series={[{ name: "Calls", data: sentimentKeys.map((k) => s.by_sentiment[k]) }]} sliceColors={sentimentKeys.map((k) => SENTIMENT_COLOR[k])} />
           {narrative && <Note>{narrative.chart_insights.sentiment}</Note>}
@@ -198,11 +197,11 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
         </Box>
       </div>
 
-      {/* ── SECONDARY SECTIONS: Displayed on Web, omitted from 2-page PDF ── */}
-      <div className="print:hidden no-print space-y-7">
+      {/* ── More analytics: in the web view and the PDF. Only the per-call lists stay web-only. ── */}
+      <div className="space-y-7">
         {transfersOk.length > 0 && (
-          <Box title={`All ${transfersOk.length} successful hand-offs`} sub="Callers the AI correctly passed to a human">
-            <div className="grid md:grid-cols-2 gap-1.5">{transfersOk.map((c) => (
+          <Box className="print:hidden no-print" title={`All ${transfersOk.length} successful hand-offs`} sub="Callers the AI correctly passed to a human">
+            <div className="grid @xl:grid-cols-2 gap-1.5">{transfersOk.map((c) => (
               <div key={c.n} className="bg-surface-2 border-l-[3px] border-brand px-4 py-3 text-[12px] flex justify-between gap-3">
                 <div><b>#{c.n} · {c.caller}</b>{/emergenc|sinking|stuck|stranded/i.test(c.reason) && <span className="ml-1.5 bg-bad text-white text-[9px] font-mono font-bold uppercase px-1.5">Emergency</span>}<div className="text-dim mt-1">{c.reason}</div></div>
                 <span className="font-mono text-dim font-bold shrink-0">{fmtDur(c.dur_s)}</span>
@@ -211,7 +210,7 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
           </Box>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-5">
+        <div className="grid @2xl:grid-cols-2 gap-5">
           <Box title="How calls ended">
             <Chart kind="bar" forceVisible toolbar={false} ariaLabel="How calls ended" categories={disc.map(([k]) => humanize(k))} series={[{ name: "Calls", data: disc.map(([, v]) => v) }]} height={Math.max(160, disc.length * 32)} />
             {narrative && <Note>{narrative.chart_insights.disconnections}</Note>}
@@ -222,7 +221,7 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
           </Box>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-5">
+        <div className="grid @2xl:grid-cols-2 gap-5">
           <Box title="How long each type of call takes">
             <Chart kind="bar" forceVisible toolbar={false} unit="s" ariaLabel="Duration by outcome" categories={durKeys.map((k) => OUTCOME_LABEL[k as Outcome] ?? k)} series={[{ name: "Avg duration", data: durKeys.map((k) => s.duration_by_outcome[k]) }]} height={Math.max(160, durKeys.length * 32)} />
             {narrative && <Note>{narrative.chart_insights.duration}</Note>}
@@ -264,7 +263,7 @@ export default function ReportView({ snap, narrative, print }: { snap: ReportSna
         ) : null}
 
         {/* Every call transcript section */}
-        <Box title="Every call (tap to see the transcript)" sub="Tap any row for the AI's findings and the full conversation.">
+        <Box className="print:hidden no-print" title="Every call (tap to see the transcript)" sub="Tap any row for the AI's findings and the full conversation.">
           <ReportCallTable calls={snap.calls} timezone={tz} agentName={agent} />
         </Box>
       </div>

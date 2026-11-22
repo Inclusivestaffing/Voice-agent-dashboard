@@ -176,7 +176,9 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
 
             {/* Filter Dropdown Popover */}
             {filterOpen && (
-              <div className="absolute left-0 mt-2 z-40 w-80 sm:w-[500px] bg-white border border-zinc-200 rounded-xl shadow-pop p-4 space-y-4 animate-in fade-in zoom-in-95 duration-100 max-h-[80vh] overflow-y-auto">
+              <>
+              <div aria-hidden onClick={() => setFilterOpen(false)} className="sm:hidden fixed inset-0 z-[84] bg-zinc-900/30 palette-fade" />
+              <div className="palette-in absolute left-0 mt-2 z-40 w-80 sm:w-[500px] bg-white border border-zinc-200 rounded-xl shadow-pop p-4 space-y-4 max-h-[80vh] overflow-y-auto max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:left-0 max-sm:mt-0 max-sm:w-full max-sm:max-h-[88dvh] max-sm:overflow-y-auto max-sm:rounded-b-none max-sm:rounded-t-2xl max-sm:z-[85] max-sm:pb-[env(safe-area-inset-bottom)]">
                 <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-zinc-900">Filters</span>
@@ -346,6 +348,7 @@ export default function FilterBar({ workspaceId, options, savedViews = [], compa
                   )}
                 </div>
               </div>
+              </>
             )}
           </div>
         </div>

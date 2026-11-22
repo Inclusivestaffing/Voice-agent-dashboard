@@ -37,14 +37,17 @@ export default function AppShell({ basePath, logoHref, current, workspaces, demo
       <a href="#content" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[90] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:shadow-pop">Skip to content</a>
       <div className="min-h-dvh bg-bg lg:grid lg:grid-cols-[244px_minmax(0,1fr)]">
         <aside className="z-20 flex flex-col lg:sticky lg:top-0 lg:h-dvh">
-          <div className="px-4 pt-4 pb-2 shrink-0">
-            <InclusiveLogo href={logoHref} className="h-8 w-auto max-w-[160px]" />
-          </div>
-          <div className="px-2.5 pb-1 shrink-0">
-            <WorkspaceSwitcher current={current} workspaces={workspaces} demo={demo} settingsHref={`${basePath}/settings`} createProblem={createProblem} />
+          {/* Phones: logo and workspace switcher share one row; desktop: stacked in the sidebar. */}
+          <div className="flex items-center gap-2 px-3 pt-3 pb-2 lg:block lg:p-0 shrink-0">
+            <div className="shrink-0 lg:px-4 lg:pt-4 lg:pb-2">
+              <InclusiveLogo href={logoHref} className="h-7 lg:h-8 w-auto max-w-[110px] lg:max-w-[160px]" />
+            </div>
+            <div className="flex-1 min-w-0 lg:px-2.5 lg:pb-1">
+              <WorkspaceSwitcher current={current} workspaces={workspaces} demo={demo} settingsHref={`${basePath}/settings`} createProblem={createProblem} />
+            </div>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="hidden lg:block flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<nav className="p-3 text-xs text-zinc-400">Loading…</nav>}>
               <NavLinks basePath={basePath} label={demo ? "Demo workspace" : "Workspace"} />
             </Suspense>
@@ -59,12 +62,15 @@ export default function AppShell({ basePath, logoHref, current, workspaces, demo
         <div className="min-w-0 lg:py-2 lg:pr-2">
           <div className="min-h-dvh lg:min-h-[calc(100dvh-16px)] bg-white lg:rounded-2xl lg:shadow-[var(--shadow-sheet)] border-t border-zinc-200/70 lg:border-t-0">
             <TopBar basePath={basePath} workspaceName={current.name} canLogOut={canLogOut} />
-            <main id="content" className="page-enter mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8 pt-6 pb-16 lg:pt-8">
+            <main id="content" className="page-enter mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8 pt-5 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-16 lg:pt-8">
               {children}
             </main>
           </div>
         </div>
       </div>
+      <Suspense fallback={null}>
+        <NavLinks basePath={basePath} label="Sections" variant="tabbar" />
+      </Suspense>
       <Suspense fallback={null}>
         <CommandPalette basePath={basePath} />
       </Suspense>
