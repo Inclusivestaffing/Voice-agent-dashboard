@@ -1,6 +1,7 @@
 import type { RetellCall } from "../types";
 import type { CallDiagnosis } from "../ai/schemas";
 import type { HumanlikeResult } from "../humanlike/schema";
+import type { CallFeedback } from "../humanlike/feedback";
 
 /** Everything the Call History slide-over shows for one call (plain JSON, sent to the browser). */
 export interface CallDrawerData {
@@ -45,6 +46,8 @@ export interface CallDrawerData {
   /** ready = analyzed; pending = queued; skipped = not judged (reason given); off = not available here. */
   humanlike_status: "ready" | "pending" | "skipped" | "off";
   humanlike_note: string | null;
+  /** Team feedback on this call's analysis; null when feedback can't be stored here. */
+  humanlike_feedback: CallFeedback | null;
 }
 
 const LATENCY_LABEL: Record<string, string> = {
@@ -65,6 +68,7 @@ export function toDrawerData(input: {
   contactCalls: CallDrawerData["contact_calls"];
   voicePreview?: boolean;
   humanlike?: { result: HumanlikeResult | null; status: CallDrawerData["humanlike_status"]; note?: string | null };
+  feedback?: CallFeedback | null;
 }): CallDrawerData {
   const { row, raw, analysis } = input;
   const d = (analysis?.analysis ?? null) as CallDiagnosis | null;
@@ -125,5 +129,6 @@ export function toDrawerData(input: {
     humanlike: input.humanlike?.result ?? null,
     humanlike_status: input.humanlike?.status ?? "off",
     humanlike_note: input.humanlike?.note ?? null,
+    humanlike_feedback: input.feedback ?? null,
   };
 }

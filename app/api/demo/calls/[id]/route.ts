@@ -3,10 +3,12 @@ import { isResult } from "@/lib/humanlike/schema";
 import { analyzeLiveCall } from "@/lib/humanlike/run";
 import { getSource } from "@/lib/source";
 import { toDrawerData } from "@/lib/calls/drawer";
+import { getCallFeedback } from "@/lib/humanlike/feedbackStore";
+import { SAMPLE_ID } from "@/lib/live/conn";
 
 const CALL_ID = /^[A-Za-z0-9_-]{1,128}$/;
 // Room for a first-time human-likeness analysis that runs after the response is sent.
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /** Call details for the Call History slide-over: sample data, or the connected Retell account. */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -36,6 +38,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     : hl ? { result: null, status: "skipped" as const, note: hl.reason }
     : { result: null, status: (src.live ? "pending" : "off") as "pending" | "off", note: src.live ? "Analyzing this call now. It usually takes under a minute." : null };
 
+  const feedback = isResult(hl) ? await getCallFeedback(src.conn?.id ?? SAMPLE_ID, c.call_id) : null;
+
   const data = toDrawerData({
     row: { ...c, to_number: c.to_number ?? null, transfer_destination: c.transfer_destination ?? null, custom_analysis: c.custom_analysis ?? null },
     raw,
@@ -45,6 +49,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     contactCalls,
     voicePreview: !src.live,
     humanlike,
+    feedback,
   });
   return NextResponse.json(data, { headers: { "Cache-Control": "private, no-store" } });
 }

@@ -1,4 +1,4 @@
-import { CATEGORY_LABEL, isResult, scoreLabel, type HumanlikeResult, type HumanlikeStored, type Moment } from "./schema";
+import { CATEGORY_LABEL, isResult, listened, scoreLabel, type HumanlikeResult, type HumanlikeStored, type Moment } from "./schema";
 
 export interface HumanlikeSummary {
   analyzed: number;
@@ -13,6 +13,8 @@ export interface HumanlikeSummary {
   patterns: { category: string; label: string; count: number }[];
   worst: { call_id: string; score: number; start_ts: string | null; moment: Moment }[];
   topFixes: { fix: string; count: number }[];
+  /** Listening check (Gemini): calls it heard and their average naturalness, 1–5. */
+  listen: { calls: number; mos: number | null; issuesPerCall: number | null };
   sample: boolean;
 }
 
@@ -73,6 +75,7 @@ export function summarizeHumanlike(
   }
 
   const overall = avg(rs.map((r) => r.score));
+  const heard = rs.map((r) => r.listening).filter(listened);
   return {
     analyzed: rs.length, skipped, pending,
     avg: overall, label: overall == null ? null : scoreLabel(overall),
@@ -84,6 +87,11 @@ export function summarizeHumanlike(
       .map(([category, count]) => ({ category, count, label: CATEGORY_LABEL[category as keyof typeof CATEGORY_LABEL] ?? category })),
     worst,
     topFixes: [...fixes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([fix, count]) => ({ fix, count })),
+    listen: {
+      calls: heard.length,
+      mos: heard.length ? Math.round((heard.reduce((a, l) => a + l.mos, 0) / heard.length) * 10) / 10 : null,
+      issuesPerCall: heard.length ? Math.round((heard.reduce((a, l) => a + l.issues.length, 0) / heard.length) * 10) / 10 : null,
+    },
     sample: rs.some((r) => r.source === "sample"),
   };
 }

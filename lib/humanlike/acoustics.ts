@@ -153,6 +153,22 @@ export function pitchSpreadSt(track: number[]): number | null {
   return (st(hi) - st(lo)) / 2.56;
 }
 
+/**
+ * The agent's side of an interleaved stereo recording. Two-channel recordings carry each party on
+ * its own channel; mono recordings arrive as two identical channels (`mono: true`, both parties mixed).
+ */
+export function agentChannel(pcm: Int16Array, agentSegs: { start: number; end: number }[]): { agent: Float32Array; mono: boolean } {
+  const L = channel(pcm, 0), R = channel(pcm, 1);
+  let diff = 0, energy = 0;
+  for (let i = 0; i < L.length; i += 50) { diff += Math.abs(L[i] - R[i]); energy += Math.abs(L[i]); }
+  const mono = energy === 0 || diff / energy < 0.05;
+  if (mono) return { agent: L, mono };
+  // The agent channel is the one whose speech lines up with the agent's transcript timing.
+  const overlapWith = (iv: [number, number][]) => iv.reduce((t, [a, b]) => t + agentSegs.reduce((u, s) => u + Math.max(0, Math.min(b, s.end) - Math.max(a, s.start)), 0), 0);
+  const vL = vad(frameDb(L)).intervals, vR = vad(frameDb(R)).intervals;
+  return { agent: overlapWith(vL) >= overlapWith(vR) ? L : R, mono };
+}
+
 /* ───────────── Main entry ───────────── */
 
 /**
@@ -166,19 +182,7 @@ export function analyzeAgentVoice(pcm: Int16Array | null, turns: TimedTurn[]): A
   if (!pcm || pcm.length < SAMPLE_RATE || !agentSegs.length) {
     return { analyzed: false, source: "none", sentences: [], pitch_spread_median_st: null, rate_median_wps: null, rate_cv: null, pitch_cv: null, monotone_share: null, note: pcm ? "No agent speech long enough to measure." : "No recording available." };
   }
-  const L = channel(pcm, 0), R = channel(pcm, 1);
-  // Mono recordings arrive as two identical channels.
-  let diff = 0, energy = 0;
-  for (let i = 0; i < L.length; i += 50) { diff += Math.abs(L[i] - R[i]); energy += Math.abs(L[i]); }
-  const mono = energy === 0 || diff / energy < 0.05;
-  let agent: Float32Array;
-  if (mono) agent = L;
-  else {
-    // The agent channel is the one whose speech lines up with the agent's transcript timing.
-    const overlapWith = (iv: [number, number][]) => iv.reduce((t, [a, b]) => t + agentSegs.reduce((u, s) => u + Math.max(0, Math.min(b, s.end) - Math.max(a, s.start)), 0), 0);
-    const vL = vad(frameDb(L)).intervals, vR = vad(frameDb(R)).intervals;
-    agent = overlapWith(vL) >= overlapWith(vR) ? L : R;
-  }
+  const { agent, mono } = agentChannel(pcm, agentSegs);
 
   const sentences: SentenceFeatures[] = [];
   for (const s of agentSegs) {

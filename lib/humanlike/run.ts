@@ -5,7 +5,10 @@ import { hasServerStore, storeDel, storeIncr, storeSetNx } from "../live/store";
 import type { LiveWorkspace } from "../live/conn";
 import { analyzeAgentVoice, timedTurns } from "./acoustics";
 import { judgeHumanlike } from "./analyze";
+import { listenAvailable, listenToAgent } from "./listen";
 import { getHumanlike, getHumanlikeMany, saveHumanlike } from "./store";
+import { getWorkspaceFeedback } from "./feedbackStore";
+import { calibrationNotes } from "./feedback";
 import { HL_VERSION, type HumanlikeStored } from "./schema";
 
 const DAILY_CAP = Number(process.env.HUMANLIKE_DAILY_CAP || 500);
@@ -13,7 +16,8 @@ const MIN_CALL_S = 10;
 
 /**
  * Analyze one call of a connected workspace (once): fetch the full call from Retell, measure the
- * agent's voice from the recording, ask Claude for the judgement, store the result encrypted.
+ * agent's voice from the recording, have Gemini listen to it (when GEMINI_API_KEY is set), ask
+ * Claude for the judgement (when ANTHROPIC_API_KEY is set), store the result encrypted.
  * Safe to call repeatedly: a lock prevents duplicate work and finished calls are skipped.
  */
 export async function analyzeLiveCall(ws: LiveWorkspace, callId: string): Promise<HumanlikeStored | null> {
@@ -42,7 +46,10 @@ export async function analyzeLiveCall(ws: LiveWorkspace, callId: string): Promis
         try { pcm = await decodeStereo(url); } catch (e) { console.error("humanlike: decode failed", callId, e); }
       }
       const acoustic = analyzeAgentVoice(pcm, turns);
-      result = await judgeHumanlike(raw, acoustic, raw.agent_name ?? null);
+      // Gemini listens to the agent's voice first, so Claude can use what it heard.
+      const listening = listenAvailable() ? await listenToAgent(pcm, turns) : null;
+      const calibration = calibrationNotes(await getWorkspaceFeedback(ws.id).catch(() => null));
+      result = await judgeHumanlike(raw, acoustic, raw.agent_name ?? null, calibration, listening);
     }
     await saveHumanlike(ws.id, result);
     return result;

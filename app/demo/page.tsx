@@ -3,6 +3,9 @@ import { after } from "next/server";
 import { summarizeHumanlike } from "@/lib/humanlike/summary";
 import { sweepLive } from "@/lib/humanlike/run";
 import HumanlikeSection from "@/components/overview/HumanlikeSection";
+import { getWorkspaceFeedback } from "@/lib/humanlike/feedbackStore";
+import { accuracySummary } from "@/lib/humanlike/feedback";
+import { SAMPLE_ID } from "@/lib/live/conn";
 import { filtersToQuery } from "@/lib/filters";
 import { summarize, previousPeriod } from "@/lib/metrics/aggregate";
 import { parseBucket } from "@/lib/charts";
@@ -37,6 +40,8 @@ export default async function DemoOverview({ searchParams }: { searchParams: Pro
   const bucket = parseBucket(sp.bucket, f.from, f.to);
   const hlResults = await src.humanlike(calls.map((c) => c.call_id));
   const hl = summarizeHumanlike(calls, hlResults, { timezone: src.timezone, bucket });
+  const fbWs = await getWorkspaceFeedback(src.conn?.id ?? SAMPLE_ID);
+  const accuracy = fbWs ? accuracySummary(fbWs) : null;
   // Live workspace: analyze not-yet-reviewed calls in the background, newest first.
   if (src.live && src.conn && hl.pending > 0) {
     const ws = src.conn;
@@ -75,7 +80,7 @@ export default async function DemoOverview({ searchParams }: { searchParams: Pro
             callsHref={(extra) => `/demo/calls?${q}${extra ? `&${extra}` : ""}`}
             live={src.live}
           />
-          <HumanlikeSection s={hl} live={src.live} callHref={(id) => `/demo/calls?${q}&call=${encodeURIComponent(id)}`} />
+          <HumanlikeSection s={hl} live={src.live} accuracy={accuracy} callHref={(id) => `/demo/calls?${q}&call=${encodeURIComponent(id)}`} />
           <RetellAnalytics
             calls={calls}
             prevCalls={prevCalls}

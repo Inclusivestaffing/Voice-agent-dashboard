@@ -7,6 +7,8 @@ export const MOMENT_CATEGORIES = [
   // robotic
   "monotone_voice", "rushed_or_dragging", "unnatural_pause", "slow_response", "instant_response", "talks_over_caller",
   "scripted_phrasing", "repetition", "robotic_readback", "abrupt_cutoff", "awkward_ending",
+  // heard in the audio by the listening AI
+  "audio_glitch", "mispronunciation", "odd_intonation",
   // mistakes
   "ignored_caller", "wrong_information", "reasked_known_info", "misheard_caller", "no_empathy",
   // natural
@@ -19,7 +21,8 @@ export const CATEGORY_LABEL: Record<MomentCategory, string> = {
   monotone_voice: "Monotone voice", rushed_or_dragging: "Rushed or dragging", unnatural_pause: "Unnatural pause",
   slow_response: "Slow to respond", instant_response: "Answered impossibly fast", talks_over_caller: "Talked over the caller",
   scripted_phrasing: "Scripted phrasing", repetition: "Repeated itself", robotic_readback: "Robotic readback",
-  abrupt_cutoff: "Cut off mid-sound", awkward_ending: "Awkward ending", ignored_caller: "Ignored what the caller said",
+  abrupt_cutoff: "Cut off mid-sound", awkward_ending: "Awkward ending",
+  audio_glitch: "Glitch or distortion", mispronunciation: "Mispronounced a word", odd_intonation: "Odd intonation", ignored_caller: "Ignored what the caller said",
   wrong_information: "Wrong information", reasked_known_info: "Asked again for known details", misheard_caller: "Misheard the caller",
   no_empathy: "No empathy", natural_acknowledgement: "Natural acknowledgement", good_empathy: "Good empathy",
   natural_flow: "Natural flow", handled_interruption: "Handled an interruption well", other: "Other",
@@ -34,6 +37,7 @@ export const Moment = z.object({
   what: z.string().describe("What happened, in one plain-English sentence a business owner understands."),
   why: z.string().describe("Why it sounds robotic / is a mistake / sounds human, citing the measurement or words that show it."),
   fix: z.string().describe("A concrete change: exact prompt wording to add, or a voice/agent setting to adjust. Empty string for natural moments."),
+  heard: z.boolean().optional().describe("true only when this moment comes from the listening report (the listening AI heard it in the audio)."),
 });
 export type Moment = z.infer<typeof Moment>;
 
@@ -53,6 +57,31 @@ export const HumanlikeJudgement = z.object({
 });
 export type HumanlikeJudgement = z.infer<typeof HumanlikeJudgement>;
 
+/** What the listening AI (Gemini) heard in the agent's audio. Pure data; see listening.ts. */
+export const LISTEN_PROBLEMS = [
+  "glitch_or_distortion", "mispronunciation", "slurred_or_dropped_sound", "unnatural_pace",
+  "odd_intonation", "flat_robotic_tone", "odd_pause", "other",
+] as const;
+export type ListenProblem = (typeof LISTEN_PROBLEMS)[number];
+export interface ListeningIssue {
+  turn: number; at_s: number; end_s: number;
+  problem: ListenProblem; severity: "minor" | "major"; confidence: "low" | "medium" | "high";
+  heard: string;
+}
+export interface ListeningResult {
+  model: string;
+  /** Naturalness on a listening-test scale: 1 = very unnatural … 5 = sounds like a person. */
+  mos: number;
+  reason: string;
+  issues: ListeningIssue[];
+  input_tokens?: number;
+  output_tokens?: number;
+}
+/** The listening check was attempted but didn't produce a result (shown to the user as a note). */
+export interface ListeningFailure { error: string }
+export type Listening = ListeningResult | ListeningFailure;
+export const listened = (x: Listening | null | undefined): x is ListeningResult => !!x && !("error" in x);
+
 export interface HumanlikeResult {
   version: number;
   call_id: string;
@@ -68,6 +97,8 @@ export interface HumanlikeResult {
   moments: Moment[];
   top_fixes: string[];
   acoustic: Omit<AcousticSummary, "sentences"> & { sentences: number };
+  /** Listening check by an audio AI (absent when it isn't switched on). */
+  listening?: Listening;
   duration_s: number;
 }
 

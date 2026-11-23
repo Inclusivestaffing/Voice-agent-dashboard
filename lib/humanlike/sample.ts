@@ -6,7 +6,7 @@ import { demoRawCall } from "../demo/callRaw";
 import type { CallDiagnosis } from "../ai/schemas";
 import { THRESHOLDS, timedTurns, type AcousticSummary, type SentenceFeatures, type TimedTurn } from "./acoustics";
 import { acousticOnlyResult, validateMoments } from "./analyze";
-import { HL_VERSION, overallHumanScore, scoreLabel, type HumanlikeResult, type HumanlikeStored, type Moment } from "./schema";
+import { HL_VERSION, overallHumanScore, scoreLabel, type HumanlikeResult, type HumanlikeStored, type ListeningIssue, type ListeningResult, type Moment } from "./schema";
 
 /** Small deterministic pseudo-random generator so the sample looks the same on every load. */
 function rng(seed: number) {
@@ -43,11 +43,37 @@ function simulatedAcoustics(c: DemoCall, turns: TimedTurn[]): AcousticSummary {
   };
 }
 
+const r1 = (x: number) => Math.round(x * 10) / 10;
+
+/** Simulated listening check (what Gemini would report), deterministic per call. */
+function simulatedListening(c: DemoCall, turns: TimedTurn[]): ListeningResult {
+  const id = Number(c.call_id.replace(/\D/g, "")) || 1;
+  const r = rng(id * 104729);
+  const agent = turns.filter((t) => t.role === "agent");
+  if (c.call_id === "owm-9") {
+    const t = agent.find((x) => x.turn === 8);
+    return {
+      model: "sample", mos: 3.4,
+      reason: "Warm and clear in the greeting and when using the caller's name, but the phone-number readback came out one digit at a time on the same falling note, which sounds machine-generated.",
+      issues: t ? [{ turn: 8, at_s: r1(t.start), end_s: r1(t.end), problem: "flat_robotic_tone", severity: "major", confidence: "high", heard: "Read \"2 1 4 0 4 5\" one digit at a time on the same falling note, with no grouping." }] : [],
+    };
+  }
+  const mos = r1(2.7 + (id % 7) * 0.2 + r() * 0.3);
+  const issues: ListeningIssue[] = [];
+  const readback = agent.find((t) => /\d/.test(t.text));
+  if (readback) issues.push({ turn: readback.turn, at_s: r1(readback.start), end_s: r1(readback.end), problem: "unnatural_pace", severity: "minor", confidence: "medium", heard: `Rushed through the numbers in "${readback.text.slice(0, 60)}" without pausing between groups.` });
+  if (id % 6 === 1 && agent[1]) issues.push({ turn: agent[1].turn, at_s: r1(agent[1].start), end_s: r1(agent[1].end), problem: "glitch_or_distortion", severity: "minor", confidence: "medium", heard: `A short metallic warble on "${agent[1].text.split(/\s+/).slice(0, 6).join(" ")}…".` });
+  const reason = mos >= 3.8 ? "Warm, relaxed delivery with natural rises and falls; only small tells on the longer sentences."
+    : mos >= 3.2 ? "Pleasant and clear, but the melody repeats from sentence to sentence, which gives away that it's synthetic."
+    : "Clear words, but a flat, even delivery that sounds read out rather than spoken.";
+  return { model: "sample", mos, reason, issues: issues.sort((a, b) => a.at_s - b.at_s) };
+}
+
 /** Hand-written review of call #9 (the phone-number readback loop and the weekend drop-off gap). */
 const CALL9_MOMENTS: Moment[] = [
   { at_s: 13.8, end_s: 17.0, turn: 4, kind: "natural", category: "natural_acknowledgement", what: "Used the caller's name straight away: \"Thanks, Sean.\"", why: "A quick, warm acknowledgement before the next question is what a person on the phone does.", fix: "" },
   { at_s: 23.9, end_s: 28.0, turn: 6, kind: "robotic", category: "slow_response", what: "Paused for about 2.5 seconds before answering.", why: "The caller finished at 21.4s and the agent started at 23.9s; on a phone line that gap feels like nobody is there.", fix: "Raise responsiveness in Retell and keep the next step short so the reply starts sooner." },
-  { at_s: 31.9, end_s: 35.6, turn: 8, kind: "robotic", category: "robotic_readback", what: "Read the phone number back digit by digit in a flat voice: \"2 1 4 0 4 5\".", why: "Digits read one by one with no grouping or change in pitch sound machine-generated.", fix: "Add to the prompt: \"Read phone numbers back in groups (area code, three digits, four digits), e.g. 'two-one-four, oh-four, two-five'.\"" },
+  { at_s: 31.9, end_s: 35.6, turn: 8, kind: "robotic", category: "robotic_readback", heard: true, what: "Read the phone number back digit by digit in a flat voice: \"2 1 4 0 4 5\".", why: "Digits read one by one with no grouping or change in pitch sound machine-generated; the listening AI heard the same flat note on every digit.", fix: "Add to the prompt: \"Read phone numbers back in groups (area code, three digits, four digits), e.g. 'two-one-four, oh-four, two-five'.\"" },
   { at_s: 38.0, end_s: 41.8, turn: 10, kind: "mistake", category: "misheard_caller", what: "Got the number wrong again after the caller corrected it (\"2 5 at the end\").", why: "The agent appended the correction instead of replacing the last digits, so the caller had to correct it a second time.", fix: "Add to the prompt: \"When the caller corrects a number, repeat the full corrected number once and ask them to confirm.\"" },
   { at_s: 44.8, end_s: 48.4, turn: 12, kind: "robotic", category: "repetition", what: "Asked \"is that correct?\" with the same sentence for the third time.", why: "Repeating an identical sentence is the clearest sign of a script; a person would rephrase.", fix: "Add to the prompt: \"Never repeat the same sentence; if you need to confirm again, rephrase it.\"" },
   { at_s: 69.2, end_s: 76.8, turn: 18, kind: "mistake", category: "ignored_caller", what: "Restated the weekday-only policy although the caller had just said they can only come on weekends.", why: "The caller's constraint was clear; repeating the policy instead of offering an alternative feels like not listening.", fix: "Give the agent a fallback for weekend-only customers (e.g. after-hours key drop-box) and say: \"If the caller can't come on weekdays, offer the weekend option instead of repeating the hours.\"" },
@@ -61,7 +87,7 @@ function sampleFor(c: DemoCall): HumanlikeStored {
   if (durationS < 10 || turns.filter((t) => t.role === "agent").length < 2) {
     return { version: HL_VERSION, call_id: c.call_id, skipped: true, reason: durationS < 10 ? "Call too short to judge." : "Not enough agent speech in the transcript.", analyzed_at: new Date().toISOString() };
   }
-  const base = acousticOnlyResult(raw, turns, simulatedAcoustics(c, turns), durationS);
+  const base = acousticOnlyResult(raw, turns, simulatedAcoustics(c, turns), durationS, simulatedListening(c, turns));
   const d = c.analysis as unknown as CallDiagnosis | null;
   const sc = d?.scorecard;
   const listening = sc ? Math.round(((sc.intent_understanding + sc.tone_and_empathy) / 2 - 1) * 25) : 70;

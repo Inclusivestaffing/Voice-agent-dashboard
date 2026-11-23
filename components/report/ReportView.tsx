@@ -219,6 +219,7 @@ export default function ReportView({ snap, narrative, print, humanlike }: { snap
                   );
                 })}
                 <div className="text-[12px] font-mono text-muted pt-1">{humanlike.roboticPerCall} robotic moments and {humanlike.mistakesPerCall} mistakes per call on average</div>
+                {humanlike.listen.calls > 0 && <div className="text-[12px] font-mono text-muted">Voice naturalness heard by AI: {humanlike.listen.mos?.toFixed(1)} / 5 on {humanlike.listen.calls} calls</div>}
               </div>
             </div>
             {humanlike.patterns.length > 0 && (

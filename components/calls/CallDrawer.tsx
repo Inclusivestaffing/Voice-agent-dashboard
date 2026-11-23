@@ -241,7 +241,16 @@ export default function CallDrawer({ callId, apiBase, fullHref, timezone, ids, o
 
               <div className="px-5 sm:px-6 py-5" role="tabpanel">
                 {tab === "Transcript" && <Transcript data={data} time={time} playing={playing} onSeek={(t) => player.current?.seek(t)} />}
-                {tab === "Human-likeness" && <HumanlikeTab data={data} onSeek={(t) => player.current?.seek(t)} />}
+                {tab === "Human-likeness" && (
+                  <HumanlikeTab data={data} onSeek={(t) => player.current?.seek(t)}
+                    feedbackUrl={data.humanlike_feedback ? `${apiBase}/${encodeURIComponent(data.call_id)}/feedback` : null}
+                    onFeedback={(f) => {
+                      const url = `${apiBase}/${encodeURIComponent(data.call_id)}`;
+                      const hit = cache.get(url);
+                      if (hit) cache.set(url, { ...hit, humanlike_feedback: f });
+                      setData((cur) => (cur?.call_id === data.call_id ? { ...cur, humanlike_feedback: f } : cur));
+                    }} />
+                )}
                 {tab === "AI analysis" && <AiAnalysis data={data} onSeek={(t) => { setTab("Transcript"); player.current?.seek(t); }} />}
                 {tab === "Data" && <DataTab data={data} onCopy={copy} />}
                 {tab === "Details" && <DetailsTab data={data} />}

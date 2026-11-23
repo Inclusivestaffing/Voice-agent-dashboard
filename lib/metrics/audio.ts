@@ -51,6 +51,22 @@ export async function decodeStereo(url: string): Promise<Int16Array> {
   });
 }
 
+/** Encode mono 16-bit PCM as FLAC (lossless, so codec artifacts can't be mistaken for voice glitches). */
+export async function encodeFlac(pcm: Int16Array, sampleRate: number): Promise<Buffer> {
+  const bin = await ffmpegPath();
+  return new Promise((resolve, reject) => {
+    const proc = spawn(bin, ["-hide_banner", "-loglevel", "error", "-f", "s16le", "-ar", String(sampleRate), "-ac", "1", "-i", "pipe:0", "-c:a", "flac", "-f", "flac", "pipe:1"]);
+    const chunks: Buffer[] = [];
+    let err = "";
+    proc.stdout.on("data", (c: Buffer) => chunks.push(c));
+    proc.stderr.on("data", (c: Buffer) => (err += c.toString()));
+    proc.on("error", reject);
+    proc.on("close", (code) => (code === 0 ? resolve(Buffer.concat(chunks)) : reject(new Error(`ffmpeg exited ${code}: ${err.slice(0, 300)}`))));
+    proc.stdin.on("error", () => {}); // ffmpeg exiting early is reported by "close"
+    proc.stdin.end(Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength));
+  });
+}
+
 function frameDb(pcm: Int16Array, channel: 0 | 1): { db: number[]; clipped: number; total: number } {
   const n = Math.floor(pcm.length / 2);
   const db: number[] = [];

@@ -86,3 +86,54 @@ describe("moment validation", async () => {
     expect(out[0].fix).toBe("");
   });
 });
+
+import { accuracySummary, applyFeedback, calibrationNotes, emptyCallFeedback, emptyWorkspaceFeedback, momentKey, wilson } from "../../lib/humanlike/feedback";
+import type { HumanlikeResult } from "../../lib/humanlike/schema";
+
+describe("human-likeness feedback", () => {
+  const result = {
+    call_id: "c1",
+    moments: [
+      { at_s: 12.3, end_s: 14, turn: 3, kind: "robotic", category: "monotone_voice", what: "Flat delivery", why: "", fix: "x" },
+      { at_s: 40, end_s: 42, turn: 9, kind: "mistake", category: "wrong_information", what: "Wrong hours", why: "", fix: "y" },
+    ],
+  } as unknown as HumanlikeResult;
+  const k0 = momentKey(result.moments[0]), k1 = momentKey(result.moments[1]);
+
+  it("counts votes, and changing or clearing a vote adjusts the counts", () => {
+    let call = emptyCallFeedback(), ws = emptyWorkspaceFeedback();
+    ({ call, ws } = applyFeedback(result, call, ws, { type: "moment", key: k0, vote: "down", reason: "not_an_issue" })!);
+    ({ call, ws } = applyFeedback(result, call, ws, { type: "moment", key: k1, vote: "up" })!);
+    expect(ws.kinds.robotic).toEqual({ up: 0, down: 1 });
+    expect(ws.kinds.mistake).toEqual({ up: 1, down: 0 });
+    ({ call, ws } = applyFeedback(result, call, ws, { type: "moment", key: k0, vote: "up" })!);
+    expect(ws.kinds.robotic).toEqual({ up: 1, down: 0 });
+    expect(ws.categories.monotone_voice).toEqual({ up: 1, down: 0 });
+    expect(ws.recent.filter((e) => e.key === k0)).toHaveLength(1);
+    ({ call, ws } = applyFeedback(result, call, ws, { type: "moment", key: k0, vote: null })!);
+    expect(ws.kinds.robotic).toEqual({ up: 0, down: 0 });
+    expect(call.moments[k0]).toBeUndefined();
+  });
+
+  it("rejects moments that aren't in the call", () => {
+    expect(applyFeedback(result, emptyCallFeedback(), emptyWorkspaceFeedback(), { type: "moment", key: "1-robotic-repetition", vote: "up" })).toBeNull();
+  });
+
+  it("tracks score feel and missed notes", () => {
+    let { call, ws } = applyFeedback(result, emptyCallFeedback(), emptyWorkspaceFeedback(), { type: "score", vote: "low" })!;
+    ({ call, ws } = applyFeedback(result, call, ws, { type: "score", vote: "right" })!);
+    expect(ws.score).toEqual({ low: 0, right: 1, high: 0 });
+    ({ call, ws } = applyFeedback(result, call, ws, { type: "missed", text: " 1:12 read the address too fast " })!);
+    expect(call.missed?.text).toBe("1:12 read the address too fast");
+    expect(ws.missed).toHaveLength(1);
+  });
+
+  it("gives an honest range and a calibration note", () => {
+    const [lo, hi] = wilson(16, 20)!;
+    expect(lo).toBeGreaterThan(0.55); expect(hi).toBeLessThan(0.93);
+    const { ws } = applyFeedback(result, emptyCallFeedback(), emptyWorkspaceFeedback(), { type: "moment", key: k0, vote: "down", reason: "not_an_issue" })!;
+    const a = accuracySummary(ws);
+    expect(a.reviewed).toBe(1); expect(a.enough).toBe(false);
+    expect(calibrationNotes(ws)).toContain("Rejected by the reviewers");
+  });
+});

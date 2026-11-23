@@ -4,7 +4,7 @@ import { systemListWorkspaces } from "@/lib/live/conn";
 import { analyzeLiveCall } from "@/lib/humanlike/run";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /**
  * Retell webhook for a workspace created in Settings (no database):

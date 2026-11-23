@@ -6,6 +6,7 @@ import { liveAgents } from "@/lib/live/retell";
 import RetellIntegration, { type ConnectedInfo } from "@/components/settings/RetellIntegration";
 import { Card } from "@/components/ui";
 import { appOrigin } from "@/lib/origin";
+import { listenAvailable } from "@/lib/humanlike/listen";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function DemoSettingsPage() {
       </div>
 
       <Card title={connected ? "Retell integration" : "Create a workspace"} sub={connected ? "Live calls, transcripts and recordings come straight from this workspace's Retell account." : "You're on the sample workspace (Open Water Marine). Create a workspace with a Retell API key to see real calls, transcripts and recordings. The sample stays available in the workspace menu."} className="mt-6">
-        <RetellIntegration connected={connected} problem={storeProblem()} storage={storageMode()} aiReady={!!process.env.ANTHROPIC_API_KEY}
+        <RetellIntegration connected={connected} problem={storeProblem()} storage={storageMode()} aiReady={!!process.env.ANTHROPIC_API_KEY} listenReady={listenAvailable()}
           webhookUrl={src.conn ? `${await appOrigin()}/api/live/webhook/${src.conn.id}` : null} />
       </Card>
 
