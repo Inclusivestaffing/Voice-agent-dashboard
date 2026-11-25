@@ -7,16 +7,18 @@ const weekdayIn = (d: Date, tz: string) =>
   WEEKDAYS.indexOf(new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long" }).format(d) as (typeof WEEKDAYS)[number]);
 
 /**
- * Is a scheduled analysis due now? Daily: once every ~24 h. Weekly: on the chosen weekday (in the
- * workspace's time zone), or straight away if a week was missed.
+ * Is a scheduled analysis due now? The first run comes as soon as the schedule is switched on. Then
+ * daily: once every ~24 h; weekly: on the chosen weekday (in the workspace's time zone), or straight
+ * away if a week was missed.
  */
 export function isDue(s: AutomationSettings["schedule"], lastIso: string | null, now: Date, tz: string): boolean {
   if (!s.enabled) return false;
   const last = lastIso ? Date.parse(lastIso) : NaN;
   const since = Number.isFinite(last) ? now.getTime() - last : Infinity;
+  if (!Number.isFinite(last)) return true; // just switched on: the first report comes straight away
   if (s.frequency === "daily") return since > 20 * 3600_000;
   if (weekdayIn(now, tz) === s.weekday) return since > 6 * 86400_000;
-  return Number.isFinite(last) && since > 8 * 86400_000;
+  return since > 8 * 86400_000;
 }
 
 /** "Every Monday around 6:00 PM" in the workspace's time zone. */

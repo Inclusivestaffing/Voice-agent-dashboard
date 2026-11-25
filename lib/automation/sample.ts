@@ -1,4 +1,6 @@
-import { demoCalls } from "../demo/openWater";
+import { DEMO_BH, DEMO_WORKSPACE, demoCalls } from "../demo/openWater";
+import { snapshotFromCalls } from "../reports/snapshot";
+import { summarizeHumanlike } from "../humanlike/summary";
 import { sampleHumanlike } from "../humanlike/sample";
 import { isResult } from "../humanlike/schema";
 import { computeStats, type DigestCall } from "./prompt";
@@ -27,6 +29,8 @@ export function sampleRun(): DigestRun {
     period: { from, to }, started_at: "2026-09-30T23:08:12.000Z", finished_at: "2026-09-30T23:10:00.000Z",
     source: "claude", model: "claude-opus-5-5", usage: { input_tokens: 41_200, output_tokens: 6_150, cost_usd: 0.288 },
     stats, callRefs: refs, sample: true,
+    snapshot: snapshotFromCalls({ calls: rows, prev: [], transcripts: new Map(), workspace: DEMO_WORKSPACE, businessHours: DEMO_BH, period: { from, to } }),
+    humanlike: summarizeHumanlike(rows, hl, { timezone: "America/Chicago", bucket: "day" }),
     narrative: {
       headline: "Allen handles routine questions well, but weekend callers with an urgent problem are left without a next step.",
       health: "watch",

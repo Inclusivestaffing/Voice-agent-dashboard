@@ -23,9 +23,14 @@ export const maxDuration = 300;
 export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization") ?? "";
   const secret = process.env.CRON_SECRET;
-  if (!secret || secret.length < 16 || !safeEqual(auth, `Bearer ${secret}`)) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!secret || secret.length < 16) {
+    // No CRON_SECRET yet: Vercel's own daily cron can still start the scheduled analyses. That only runs
+    // what is due (at most once per period), so a forged request can't cost more than the schedule would.
+    if (!(req.headers.get("user-agent") ?? "").startsWith("vercel-cron/")) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    const automation = await dispatchDue(await systemListWorkspaces(), Date.now() + 240_000).catch((e) => ({ error: String(e) }));
+    return NextResponse.json({ ok: true, automation, note: "Set CRON_SECRET for the full daily job." });
   }
+  if (!safeEqual(auth, `Bearer ${secret}`)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const started = Date.now();
   const results: Record<string, unknown> = {};
 

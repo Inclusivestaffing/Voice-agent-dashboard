@@ -13,6 +13,8 @@ import { hasServerStore, storeDel, storeGet, storeLPush, storeLRange, storeLTrim
 import { retellClient } from "../retell/client";
 import type { RetellCall } from "../types";
 import { getAutomationSettings } from "./settings";
+import { snapshotFromCalls } from "../reports/snapshot";
+import { summarizeHumanlike } from "../humanlike/summary";
 import {
   DIGEST_SYSTEM, buildDigestPrompt, chooseTranscriptCalls, computeStats, ruleNarrative, transcriptText, validateNarrative,
   type AgentPrompt, type DigestCall,
@@ -112,6 +114,7 @@ async function agentPrompts(ws: LiveWorkspace, calls: (DigestCall & { agent_id: 
   return out;
 }
 
+const WEEKDAY_HOURS: Record<string, [number, number]> = { mon: [9, 17], tue: [9, 17], wed: [9, 17], thu: [9, 17], fri: [9, 17] };
 const runId = () => `r_${Date.now().toString(36)}${randomBytes(3).toString("hex")}`;
 // Claude Opus 5.5 list prices per million tokens: input $4, 5-minute cache write $5, cache read $0.20, output $20.
 const costUsd = (u: { input_tokens: number; output_tokens: number; cache_creation_input_tokens?: number | null; cache_read_input_tokens?: number | null }) =>
@@ -195,7 +198,18 @@ export async function runDigest(ws: LiveWorkspace, opts: { trigger: "schedule" |
     const refs: Record<string, CallRef> = {};
     for (const c of calls) if (ids.has(c.sig.call_id)) refs[c.sig.call_id] = { start_ts: c.sig.start_ts, score: isResult(c.hl) ? c.hl.score : null, summary: c.sig.call_summary?.slice(0, 200) ?? null };
 
-    Object.assign(run, { status: "done", stats, narrative, callRefs: refs, finished_at: new Date().toISOString() });
+    // Every metric for the period (the same numbers and charts as Reports), without transcripts.
+    const span = Date.parse(run.period.to) - Date.parse(run.period.from);
+    const prevRows = await liveCalls(ws, new Date(Date.parse(run.period.from) - span).toISOString(), run.period.from).catch(() => []);
+    const agentNames = [...new Set(rows.map((r) => r.agent_name).filter(Boolean))];
+    const snapshot = snapshotFromCalls({
+      calls: rows, prev: prevRows, transcripts: new Map(), period: run.period, businessHours: WEEKDAY_HOURS,
+      workspace: { name: ws.name, logo_url: "/inclusive-logo.png", brand_primary: "#facc15", agent_name: agentNames.length === 1 ? agentNames[0] : "Agent", timezone: ws.timezone },
+    });
+    snapshot.calls = snapshot.calls.slice(-400).map((c) => ({ ...c, summary: c.summary.slice(0, 240), transcript: "" }));
+    const humanlike = summarizeHumanlike(rows, results, { timezone: ws.timezone, bucket: frequency === "daily" ? "hour" : "day" });
+
+    Object.assign(run, { status: "done", stats, narrative, callRefs: refs, snapshot, humanlike, finished_at: new Date().toISOString() });
     await saveRun(run);
     await notifyDigest(run);
     return run;

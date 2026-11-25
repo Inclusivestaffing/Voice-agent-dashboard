@@ -1,5 +1,7 @@
 import * as z from "zod/v4";
 import { INBOX_REASONS, type InboxReason } from "../inbox/types";
+import type { ReportSnapshot } from "../reports/snapshot";
+import type { HumanlikeSummary } from "../humanlike/summary";
 
 /** Per-workspace Automation settings: which urgent things go to the inbox, and the scheduled analysis. */
 export interface AutomationSettings {
@@ -107,5 +109,8 @@ export interface DigestRun {
   model?: string;
   usage?: { input_tokens: number; output_tokens: number; cost_usd: number };
   callRefs?: Record<string, CallRef>;
+  /** Every metric for the period, shown as the full report (same charts as Reports). */
+  snapshot?: ReportSnapshot;
+  humanlike?: HumanlikeSummary;
   sample?: boolean;
 }

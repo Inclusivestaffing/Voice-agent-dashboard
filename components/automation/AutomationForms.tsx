@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { Button, cx } from "@/components/ui";
 import { toast } from "@/components/feedback/Toaster";
 import { saveAlerts, saveSchedule, runNow, type AutoState } from "@/app/demo/automation/actions";
@@ -9,6 +9,15 @@ import { INBOX_REASONS, REASON_HELP, REASON_LABEL } from "@/lib/inbox/types";
 import { WEEKDAYS, type AutomationSettings } from "@/lib/automation/types";
 
 const field = "h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 shadow-[0_1px_1px_rgb(15_23_42/0.03)] hover:border-zinc-300 focus:border-zinc-400 focus-visible:outline-none focus:ring-4 focus:ring-zinc-900/5 disabled:bg-zinc-50 disabled:text-zinc-400";
+
+/**
+ * Submit without React resetting the form afterwards (it would put every field back to its starting
+ * value, so a schedule switched on looked switched off after saving).
+ */
+function useSubmit(action: (fd: FormData) => void) {
+  const [, start] = useTransition();
+  return (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); const fd = new FormData(e.currentTarget); start(() => action(fd)); };
+}
 
 function Status({ state }: { state: AutoState }) {
   if (!state) return null;
@@ -18,8 +27,9 @@ function Status({ state }: { state: AutoState }) {
 /** Urgent alerts: quality threshold + which kinds of calls go to the inbox. */
 export function AlertsForm({ settings, disabled = false }: { settings: AutomationSettings; disabled?: boolean }) {
   const [state, action, pending] = useActionState(saveAlerts, null);
+  const submit = useSubmit(action);
   return (
-    <form action={action} className="space-y-5">
+    <form onSubmit={submit} className="space-y-5">
       <fieldset disabled={disabled} className="space-y-5">
         <label className="block max-w-xs">
           <span className="block text-[13px] font-medium text-zinc-700">Quality alert below</span>
@@ -57,13 +67,21 @@ export function ScheduleForm({ settings, label, costDaily, costWeekly, aiReady, 
   settings: AutomationSettings; label: { daily: string; weekly: string[] }; costDaily: number; costWeekly: number; aiReady: boolean; disabled?: boolean;
 }) {
   const [state, action, pending] = useActionState(saveSchedule, null);
+  const submit = useSubmit(action);
   const [enabled, setEnabled] = useState(settings.schedule.enabled);
   const [freq, setFreq] = useState(settings.schedule.frequency);
   const [weekday, setWeekday] = useState(settings.schedule.weekday);
   const when = freq === "daily" ? label.daily : label.weekly[weekday];
   const cost = freq === "daily" ? costDaily : costWeekly;
+  const router = useRouter();
+  // The first report may have just started: refresh so it shows under Past runs (which then keeps checking).
+  useEffect(() => {
+    if (!state?.ok) return;
+    const t = window.setTimeout(() => router.refresh(), 3000);
+    return () => window.clearTimeout(t);
+  }, [state, router]);
   return (
-    <form action={action} className="space-y-5">
+    <form onSubmit={submit} className="space-y-5">
       <fieldset disabled={disabled} className="space-y-5">
         <label className="flex items-start gap-3">
           <input type="checkbox" name="enabled" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="peer sr-only" />
@@ -107,6 +125,7 @@ export function ScheduleForm({ settings, label, costDaily, costWeekly, aiReady, 
 
 export function RunNow({ costDaily, costWeekly, aiReady, running, disabled = false }: { costDaily: number; costWeekly: number; aiReady: boolean; running: boolean; disabled?: boolean }) {
   const [state, action, pending] = useActionState(runNow, null);
+  const submit = useSubmit(action);
   const [freq, setFreq] = useState<"daily" | "weekly">("weekly");
   const router = useRouter();
   const busy = running || (!!state?.ok && !state.error);
@@ -120,7 +139,7 @@ export function RunNow({ costDaily, costWeekly, aiReady, running, disabled = fal
   useEffect(() => { if (state?.ok) toast("Analysis started"); }, [state]);
   const cost = freq === "daily" ? costDaily : costWeekly;
   return (
-    <form action={action} className="flex flex-wrap items-center gap-3">
+    <form onSubmit={submit} className="flex flex-wrap items-center gap-3">
       <label className="sr-only" htmlFor="run-period">Period</label>
       <select id="run-period" name="frequency" value={freq} onChange={(e) => setFreq(e.target.value as "daily" | "weekly")} disabled={disabled} className={cx(field, "h-9")}>
         <option value="weekly">Last 7 days</option>

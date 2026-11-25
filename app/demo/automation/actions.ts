@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { gateActive, getActiveWorkspace } from "@/lib/live/conn";
 import { isSignedIn } from "@/lib/auth/gate";
 import { getAutomationSettings, saveAutomationSettings } from "@/lib/automation/settings";
-import { listRuns, runDigest } from "@/lib/automation/digest";
+import { lastScheduledAt, listRuns, runDigest } from "@/lib/automation/digest";
+import { dueWorkspaces } from "@/lib/automation/dispatch";
 import { INBOX_REASONS, type InboxReason } from "@/lib/inbox/types";
 
 export type AutoState = { ok?: boolean; error?: string; message?: string } | null;
@@ -44,7 +45,11 @@ export async function saveSchedule(_: AutoState, form: FormData): Promise<AutoSt
     s.schedule = { enabled: form.get("enabled") === "on", frequency, weekday: Number.isInteger(weekday) && weekday >= 0 && weekday <= 6 ? weekday : s.schedule.weekday };
     await saveAutomationSettings(ws.id, s);
     revalidatePath("/demo/automation");
-    return { ok: true, message: s.schedule.enabled ? "Saved. The analysis will run on schedule." : "Saved. Scheduled analysis is off." };
+    if (!s.schedule.enabled) return { ok: true, message: "Saved. Scheduled analysis is off." };
+    // Switched on for the first time: the first report starts now instead of waiting for the next slot.
+    const first = !(await lastScheduledAt(ws.id)) && (await dueWorkspaces([ws])).length > 0;
+    if (first) after(() => runDigest(ws, { trigger: "schedule" }).then(() => undefined));
+    return { ok: true, message: first ? "Saved. The first report is being made now (1–3 minutes) and will appear under Past runs." : "Saved. The analysis will run on schedule." };
   } catch (e) { return fail(e); }
 }
 

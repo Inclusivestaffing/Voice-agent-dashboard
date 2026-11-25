@@ -1,5 +1,6 @@
 import "server-only";
 import type { LiveWorkspace } from "../live/conn";
+import { storeSetNx } from "../live/store";
 import { getAutomationSettings } from "./settings";
 import { lastScheduledAt, runDigest } from "./digest";
 import { isDue } from "./schedule";
@@ -12,19 +13,29 @@ export function selfOrigin(): string | null {
   return prod ? `https://${prod}` : null;
 }
 
+/** Workspaces whose scheduled analysis is due now. */
+export async function dueWorkspaces(workspaces: LiveWorkspace[]): Promise<LiveWorkspace[]> {
+  const out: LiveWorkspace[] = [];
+  for (const ws of workspaces) {
+    try {
+      const s = await getAutomationSettings(ws.id);
+      if (isDue(s.schedule, await lastScheduledAt(ws.id), new Date(), ws.timezone)) out.push(ws);
+    } catch { /* storage hiccup: next check */ }
+  }
+  return out;
+}
+
 /**
- * Start every scheduled analysis that's due. Each run gets its own server request (up to 5 minutes
- * each), so one slow workspace can't stop the others. Without a known site address, runs happen
- * here one after another while time allows.
+ * Start every scheduled analysis that's due. With CRON_SECRET, each run gets its own server request
+ * (up to 5 minutes each), so one slow workspace can't stop the others. Otherwise runs happen here one
+ * after another while time allows.
  */
 export async function dispatchDue(workspaces: LiveWorkspace[], deadline: number) {
   const out: Record<string, string> = {};
   const origin = selfOrigin();
-  for (const ws of workspaces) {
+  for (const ws of await dueWorkspaces(workspaces)) {
     try {
-      const s = await getAutomationSettings(ws.id);
-      if (!isDue(s.schedule, await lastScheduledAt(ws.id), new Date(), ws.timezone)) continue;
-      if (origin && process.env.CRON_SECRET) {
+      if (origin && (process.env.CRON_SECRET ?? "").length >= 16) {
         const res = await fetch(`${origin}/api/automation/run`, {
           method: "POST", redirect: "manual", signal: AbortSignal.timeout(15_000),
           headers: { Authorization: `Bearer ${process.env.CRON_SECRET}`, "Content-Type": "application/json" },
@@ -41,4 +52,15 @@ export async function dispatchDue(workspaces: LiveWorkspace[], deadline: number)
     }
   }
   return out;
+}
+
+/**
+ * Called while someone has the dashboard open (the inbox refreshes every minute): runs the first due
+ * analysis in the background of that request, so schedules don't depend only on the once-a-day job.
+ * Checks at most every 2 minutes.
+ */
+export async function runDueNow(workspaces: LiveWorkspace[]) {
+  if (!workspaces.length || !(await storeSetNx("va:auto:kick", "1", 120).catch(() => false))) return null;
+  const [ws] = await dueWorkspaces(workspaces);
+  return ws ? runDigest(ws, { trigger: "schedule" }) : null;
 }

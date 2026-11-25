@@ -76,7 +76,8 @@ describe("schedule", () => {
     const monday = { enabled: true, frequency: "weekly" as const, weekday: 1 };
     const tuesday = { ...monday, weekday: 2 };
     expect(isDue(monday, null, mondayEvening, tz)).toBe(true);
-    expect(isDue(tuesday, null, mondayEvening, tz)).toBe(false); // it's still Monday in Chicago
+    expect(isDue(tuesday, null, mondayEvening, tz)).toBe(true); // just switched on: first report now
+    expect(isDue(tuesday, "2026-11-20T00:00:00Z", mondayEvening, tz)).toBe(false); // still Monday in Chicago
     expect(isDue(monday, "2026-11-20T00:00:00Z", mondayEvening, tz)).toBe(false); // ran 4 days ago
     expect(isDue(tuesday, "2026-11-12T00:00:00Z", mondayEvening, tz)).toBe(true); // 12 days: missed
     expect(isDue({ ...monday, enabled: false }, null, mondayEvening, tz)).toBe(false);

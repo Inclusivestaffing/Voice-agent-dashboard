@@ -1,15 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { inboxAllowed, loadInbox } from "@/lib/inbox/load";
 import { ITEM_ID, inboxAvailable, listInbox, setRead } from "@/lib/inbox/store";
+import { listWorkspaces } from "@/lib/live/conn";
+import { runDueNow } from "@/lib/automation/dispatch";
 
 export const runtime = "nodejs";
+export const maxDuration = 300; // a due scheduled analysis may run in the background of this request
 const noStore = { "Cache-Control": "private, no-store" };
 
 /** The inbox for the top bar: newest items from every workspace. Signed-in users only. */
 export async function GET(req: Request) {
   if (!(await inboxAllowed())) return NextResponse.json({ error: "Sign in first." }, { status: 401, headers: noStore });
   const limit = Math.min(200, Math.max(1, Number(new URL(req.url).searchParams.get("limit")) || 40));
+  // Start a due scheduled analysis (the daily job does too; this makes schedules run on time).
+  if (inboxAvailable()) { const workspaces = await listWorkspaces(); after(() => runDueNow(workspaces).then(() => undefined).catch(() => undefined)); }
   return NextResponse.json(await loadInbox(limit), { headers: noStore });
 }
 

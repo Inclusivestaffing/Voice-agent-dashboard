@@ -139,8 +139,9 @@ export default async function AutomationPage() {
                 : <>Paste this URL into your agent&rsquo;s <b className="font-medium text-zinc-700">Webhook URL</b> in Retell (Agent → Webhook settings). Until then, urgent calls are picked up by the daily check or when you open Call History.
                   {webhookUrl && <CopyText text={webhookUrl} />}</>}
             </Check>
-            <Check ok={cronReady} title={cronReady ? "Daily check is set up" : "Add CRON_SECRET in Vercel"}>
-              {cronReady ? "The daily job runs the schedule and picks up anything the webhook missed." : "Scheduled runs need it: Vercel → Settings → Environment Variables → CRON_SECRET, any random text of 16+ characters. Then redeploy."}
+            <Check ok={cronReady} title={cronReady ? "Daily check is set up" : "Recommended: add CRON_SECRET in Vercel"}>
+              {cronReady ? "The daily job runs the schedule and picks up anything the webhook missed."
+                : "Scheduled reports still run (from Vercel's daily job and whenever the dashboard is open). Adding CRON_SECRET (any random text, 16+ characters) also turns on the daily catch-up of missed alerts and analysis. Then redeploy."}
             </Check>
             <Check ok={aiReady} title={aiReady ? "Claude Opus 5.5 is connected" : "Add ANTHROPIC_API_KEY in Vercel"}>
               {aiReady ? "It writes the scheduled review and each call's quality judgement." : "Needed for Claude's full review and suggestions. Without it you get the numbers and the most common per-call fixes."}
