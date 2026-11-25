@@ -29,6 +29,13 @@ export const storeDel = (key: string) => command<number>(["DEL", key]);
 export const storeMGet = (keys: string[]) => (keys.length ? command<(string | null)[]>(["MGET", ...keys]) : Promise.resolve([] as (string | null)[]));
 /** SET only if the key doesn't exist, expiring after `ttlS` seconds. True when this call set it (a lock). */
 export const storeSetNx = async (key: string, value: string, ttlS: number) => (await command<string>(["SET", key, value, "NX", "EX", ttlS])) === "OK";
+/** SET with an expiry in seconds. */
+export const storeSetEx = (key: string, value: string, ttlS: number) => command<string>(["SET", key, value, "EX", ttlS]);
+/** Lists (newest first with LPUSH). */
+export const storeLPush = (key: string, value: string) => command<number>(["LPUSH", key, value]);
+export const storeLRange = async (key: string, start: number, stop: number) => (await command<string[]>(["LRANGE", key, start, stop])) ?? [];
+export const storeLTrim = (key: string, start: number, stop: number) => command<string>(["LTRIM", key, start, stop]);
+export const storeLRem = (key: string, value: string) => command<number>(["LREM", key, 0, value]);
 /** Increment a counter that expires after `ttlS` seconds; returns the new value. */
 export async function storeIncr(key: string, ttlS: number): Promise<number> {
   const n = (await command<number>(["INCR", key])) ?? 0;

@@ -10,6 +10,8 @@ import { getHumanlike, getHumanlikeMany, saveHumanlike } from "./store";
 import { getWorkspaceFeedback } from "./feedbackStore";
 import { calibrationNotes } from "./feedback";
 import { HL_VERSION, type HumanlikeStored } from "./schema";
+import { notifyCall, signalsFromRaw } from "../inbox/notify";
+import type { RetellCall } from "../types";
 
 const DAILY_CAP = Number(process.env.HUMANLIKE_DAILY_CAP || 500);
 const MIN_CALL_S = 10;
@@ -26,17 +28,18 @@ export async function analyzeLiveCall(ws: LiveWorkspace, callId: string): Promis
   if (existing) return existing;
   const lock = `va:hl:lock:${ws.id}:${callId}`;
   if (!(await storeSetNx(lock, "1", 300))) return null; // another run is on it
+  let raw: RetellCall | null = null;
+  let result: HumanlikeStored | null = null;
   try {
+    raw = await liveCall(ws, callId);
+    if (!raw) return null;
+    if (raw.call_status !== "ended") return null; // try again once the call is over (errors are still alerted below)
     const day = new Date().toISOString().slice(0, 10);
     if ((await storeIncr(`va:hl:count:${ws.id}:${day}`, 2 * 86400)) > DAILY_CAP) return null;
 
-    const raw = await liveCall(ws, callId);
-    if (!raw) return null;
-    if (raw.call_status !== "ended") return null; // try again once the call is over
     const turns = timedTurns(raw.transcript_object);
     const durationS = (raw.duration_ms ?? 0) / 1000;
     const skip = (reason: string): HumanlikeStored => ({ version: HL_VERSION, call_id: callId, skipped: true, reason, analyzed_at: new Date().toISOString() });
-    let result: HumanlikeStored;
     if (durationS < MIN_CALL_S) result = skip("Call too short to judge.");
     else if (turns.filter((t) => t.role === "agent").length < 2) result = skip("Not enough agent speech in the transcript.");
     else {
@@ -58,6 +61,10 @@ export async function analyzeLiveCall(ws: LiveWorkspace, callId: string): Promis
     return null;
   } finally {
     await storeDel(lock).catch(() => {});
+    // Urgent calls go to the inbox right away: low quality, failed transfer, upset caller, errors…
+    if (raw && raw.call_status !== "ongoing" && raw.call_status !== "registered") {
+      await notifyCall(ws, signalsFromRaw(raw), result).catch(() => null);
+    }
   }
 }
 

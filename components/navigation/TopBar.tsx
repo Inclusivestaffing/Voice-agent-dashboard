@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useApp } from "@/components/context/AppContext";
 import { toast } from "@/components/feedback/Toaster";
 import { signOut } from "@/app/unlock/actions";
+import InboxButton from "@/components/inbox/InboxButton";
 
 const SECTIONS: [RegExp, string, string][] = [
   [/\/calls\/[^/]+$/, "Call History", "/calls"],
@@ -12,16 +13,19 @@ const SECTIONS: [RegExp, string, string][] = [
   [/\/reports\/(view|[^/]+)$/, "Reports", "/reports"],
   [/\/reports$/, "Reports", ""],
   [/\/settings$/, "Settings", ""],
+  [/\/automation\/runs\/[^/]+$/, "Automation", "/automation"],
+  [/\/automation$/, "Automation", ""],
+  [/\/inbox$/, "Inbox", ""],
 ];
 
-/** Sticky bar at the top of the content sheet: where you are, plus the two global actions. */
-export default function TopBar({ basePath, workspaceName, canLogOut = false }: { basePath: string; workspaceName: string; canLogOut?: boolean }) {
+/** Sticky bar at the top of the content sheet: where you are, plus the global actions (inbox, Ask AI). */
+export default function TopBar({ basePath, workspaceName, canLogOut = false, inbox = false }: { basePath: string; workspaceName: string; canLogOut?: boolean; inbox?: boolean }) {
   const path = usePathname();
   const { openAskAi } = useApp();
   const hit = SECTIONS.find(([re]) => re.test(path));
   const section = hit?.[1] ?? "Analytics";
   const parentHref = hit?.[2] ? `${basePath}${hit[2]}` : null;
-  const leaf = path.match(/\/calls\/([^/]+)$/) ? "Call" : path.endsWith("/reports/view") || /\/reports\/[^/]+$/.test(path) && !path.endsWith("/reports") ? "Report" : null;
+  const leaf = path.match(/\/calls\/([^/]+)$/) ? "Call" : /\/automation\/runs\/[^/]+$/.test(path) ? "Analysis" : path.endsWith("/reports/view") || /\/reports\/[^/]+$/.test(path) && !path.endsWith("/reports") ? "Report" : null;
 
   async function copyLink() {
     try { await navigator.clipboard.writeText(window.location.href); toast("Link copied"); }
@@ -50,6 +54,7 @@ export default function TopBar({ basePath, workspaceName, canLogOut = false }: {
         <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
         Copy link
       </button>
+      {inbox && <InboxButton />}
       <button type="button" onClick={() => openAskAi()}
         className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-zinc-900 pl-2.5 pr-3 text-[13px] font-medium text-white shadow-[0_1px_2px_rgb(24_24_27/0.2),inset_0_1px_0_rgb(255_255_255/0.08)] hover:bg-zinc-800">
         <svg className="h-3.5 w-3.5 text-brand" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="m12 2 1.9 5.6a3 3 0 0 0 1.9 1.9L21.4 11.4 15.8 13.3a3 3 0 0 0-1.9 1.9L12 20.8l-1.9-5.6a3 3 0 0 0-1.9-1.9L2.6 11.4l5.6-1.9a3 3 0 0 0 1.9-1.9Z" /></svg>

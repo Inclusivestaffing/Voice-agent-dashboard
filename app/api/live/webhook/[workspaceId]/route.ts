@@ -2,6 +2,7 @@ import { NextResponse, after, type NextRequest } from "next/server";
 import Retell from "retell-sdk";
 import { systemListWorkspaces } from "@/lib/live/conn";
 import { analyzeLiveCall } from "@/lib/humanlike/run";
+import { noteWebhook } from "@/lib/automation/settings";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -22,6 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ wor
   if (!ws) return NextResponse.json({ error: "unknown workspace" }, { status: 404 });
   const valid = await Retell.verify(body, ws.apiKey, req.headers.get("x-retell-signature") ?? "").catch(() => false);
   if (!valid) return NextResponse.json({ error: "invalid signature" }, { status: 401 });
+  after(() => noteWebhook(ws.id)); // shown in Automation: instant alerts are wired up
 
   let payload: { event?: string; call?: { call_id?: string; agent_id?: string; call_analysis?: unknown } };
   try { payload = JSON.parse(body); } catch { return NextResponse.json({ error: "bad json" }, { status: 400 }); }

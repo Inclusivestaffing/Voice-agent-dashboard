@@ -15,11 +15,12 @@ export default function NavLinks({ basePath, label = "Workspace", settings = tru
   const qs = keptQuery(sp, basePath, live);
 
   if (variant === "tabbar") {
+    const items = navItems(basePath, role, { settings });
     return (
       <nav aria-label={label}
         className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200/80 bg-white/90 backdrop-blur-md supports-[backdrop-filter]:bg-white/80 pb-[env(safe-area-inset-bottom)]">
-        <div className="grid grid-cols-4">
-          {navItems(basePath, role, { settings }).map((it) => (
+        <div className="grid" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+          {items.map((it) => (
             <NavLink
               key={it.href}
               it={it}

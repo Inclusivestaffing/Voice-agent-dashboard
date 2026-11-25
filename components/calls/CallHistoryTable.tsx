@@ -74,7 +74,7 @@ export default function CallHistoryTable({ rows, timezone, detailBase, navQuery,
   const openId = sp.get("call");
   const setCall = useCallback((id: string | null, mode: "push" | "replace" = "push") => {
     const u = new URL(window.location.href);
-    if (id) u.searchParams.set("call", id); else u.searchParams.delete("call");
+    if (id) u.searchParams.set("call", id); else { u.searchParams.delete("call"); u.searchParams.delete("tab"); }
     window.history[mode === "push" ? "pushState" : "replaceState"](null, "", u.toString());
   }, []);
   const openCall = (e: React.MouseEvent, id: string) => {
@@ -185,6 +185,7 @@ export default function CallHistoryTable({ rows, timezone, detailBase, navQuery,
           ids={ids}
           onNavigate={(id) => setCall(id, "replace")}
           onClose={() => setCall(null, "replace")}
+          initialTab={sp.get("tab")}
         />
       )}
     </>

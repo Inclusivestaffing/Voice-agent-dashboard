@@ -30,15 +30,17 @@ type Tab = (typeof TABS)[number];
  * conversation analysis, summary, transcript (synced to playback), AI diagnosis, variables,
  * latency and cost, plus the caller's other calls. ↑/↓ moves through the list behind it.
  */
-export default function CallDrawer({ callId, apiBase, fullHref, timezone, ids, onNavigate, onClose }: {
+export default function CallDrawer({ callId, apiBase, fullHref, timezone, ids, onNavigate, onClose, initialTab }: {
   callId: string; apiBase: string; fullHref: (id: string) => string; timezone: string; ids: string[];
   onNavigate: (id: string) => void; onClose: () => void;
+  /** "quality" opens the Human-likeness tab (links from the inbox). */
+  initialTab?: string | null;
 }) {
   const [mounted, setMounted] = useState(false);
   const [shown, setShown] = useState(false);
   const [data, setData] = useState<CallDrawerData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("Transcript");
+  const [tab, setTab] = useState<Tab>(initialTab === "quality" ? "Human-likeness" : "Transcript");
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const panel = useRef<HTMLDivElement>(null);

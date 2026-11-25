@@ -61,7 +61,7 @@ export default function AppShell({ basePath, logoHref, current, workspaces, demo
 
         <div className="min-w-0 lg:py-2 lg:pr-2">
           <div className="min-h-dvh lg:min-h-[calc(100dvh-16px)] bg-white lg:rounded-2xl lg:shadow-[var(--shadow-sheet)] border-t border-zinc-200/70 lg:border-t-0">
-            <TopBar basePath={basePath} workspaceName={current.name} canLogOut={canLogOut} />
+            <TopBar basePath={basePath} workspaceName={current.name} canLogOut={canLogOut} inbox={demo} />
             <main id="content" className="page-enter mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8 pt-5 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-16 lg:pt-8">
               {children}
             </main>

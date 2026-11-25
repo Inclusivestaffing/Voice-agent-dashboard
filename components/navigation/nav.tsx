@@ -41,6 +41,17 @@ export const Icons = {
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </I>
   ),
+  automation: (
+    <I>
+      <path d="M13 2 4.1 12.6a.6.6 0 0 0 .5 1H11l-1 8.4L18.9 11.4a.6.6 0 0 0-.5-1H13z" />
+    </I>
+  ),
+  inbox: (
+    <I>
+      <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </I>
+  ),
   askAi: (
     <I>
       <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
@@ -66,6 +77,7 @@ export function navItems(basePath: string, _role: Role, opts: { settings?: boole
     { href: `${basePath}/calls`, label: "Call History", icon: Icons.calls, keepQuery: true },
   ];
   items.push({ href: `${basePath}/reports`, label: "Reports", icon: Icons.reports, keepQuery: false });
+  if (demo) items.push({ href: "/demo/automation", label: "Automation", icon: Icons.automation, keepQuery: false });
   if (includeSettings) {
     items.push({ href: `${basePath}/settings`, label: "Settings", icon: Icons.settings, keepQuery: false });
   }
